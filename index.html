@@ -1,0 +1,297 @@
+<!DOCTYPE html>
+<html lang="tr">
+<head>
+<meta charset="UTF-8">
+<title>Kelime Egzersiz</title>
+
+<style>
+body { font-family: Arial; padding: 20px; }
+
+.title-bar {
+    display: flex;
+    align-items: center;
+    gap: 15px;
+}
+
+#fileTitle {
+    color: #007bff;
+    font-size: 16px;
+    background: #eef5ff;
+    padding: 4px 10px;
+    border-radius: 8px;
+}
+
+.question-box {
+    border: 1px solid #ccc;
+    padding: 15px;
+    margin-bottom: 15px;
+    border-radius: 10px;
+}
+
+.options {
+    display: grid;
+    grid-template-columns: repeat(5, 1fr);
+    gap: 8px;
+    margin-top: 10px;
+}
+
+button {
+    padding: 8px;
+    cursor: pointer;
+}
+
+.correct { color: green; }
+.wrong { color: red; }
+
+.top-buttons {
+    margin-bottom: 10px;
+}
+</style>
+</head>
+
+<body>
+
+<div class="title-bar">
+    <h2>📘 Kelime Egzersiz</h2>
+    <span id="fileTitle"></span>
+</div>
+
+<h3>📂 Kelime Dosyası Seç</h3>
+<input type="file" id="fileInput">
+
+<div class="top-buttons">
+    <button onclick="setMode('all')">📚 Tüm Kelimeler</button>
+    <button onclick="setMode('hard')">🔥 Zor Kelimeler</button>
+    <button onclick="resetProgress()">🔄 Sıfırla</button>
+</div>
+
+<p id="progress"></p>
+
+<div id="quizContainer"></div>
+
+<script>
+
+let words = [];
+let currentFile = "";
+
+let usedWords = [];
+let hardWords = [];
+
+let mode = "all";
+
+
+// 🔥 STORAGE
+function getKey(name){
+    return name + "_" + currentFile;
+}
+
+function loadStorage(){
+    usedWords = JSON.parse(localStorage.getItem(getKey("usedWords"))) || [];
+    hardWords = JSON.parse(localStorage.getItem(getKey("hardWords"))) || [];
+}
+
+function save(){
+    localStorage.setItem(getKey("usedWords"), JSON.stringify(usedWords));
+    localStorage.setItem(getKey("hardWords"), JSON.stringify(hardWords));
+}
+
+
+// 📂 DOSYA YÜKLE
+document.getElementById("fileInput").addEventListener("change", function(e){
+
+    const file = e.target.files[0];
+    if(!file) return;
+
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+
+        try {
+            const text = event.target.result;
+
+            const sandbox = {};
+
+            const func = new Function("sandbox", `
+                ${text}
+                sandbox.data = typeof defaultWords !== 'undefined' ? defaultWords : [];
+                sandbox.title = typeof title !== 'undefined' ? title : "";
+            `);
+
+            func(sandbox);
+
+            words = sandbox.data;
+            currentFile = file.name;
+
+            // ⭐ TITLE GÖSTER
+            document.getElementById("fileTitle").innerText = sandbox.title;
+
+            loadStorage();
+            updateProgress();
+
+            document.getElementById("quizContainer").innerHTML = "";
+
+            if(words.length >= 10){
+                newQuestion();
+            }
+
+        } catch(e){
+            alert("Dosya okunamadı!");
+            console.error(e);
+        }
+
+    };
+
+    reader.readAsText(file);
+});
+
+
+// 🔥 MODE
+function setMode(m){
+    mode = m;
+    document.getElementById("quizContainer").innerHTML = "";
+
+    if(words.length === 0) return;
+
+    newQuestion();
+}
+
+
+// 🔥 RESET
+function resetProgress(){
+
+    if(!currentFile) return;
+
+    localStorage.removeItem(getKey("usedWords"));
+    localStorage.removeItem(getKey("hardWords"));
+
+    loadStorage();
+    updateProgress();
+
+    document.getElementById("quizContainer").innerHTML = "";
+
+    if(words.length > 0){
+        newQuestion();
+    }
+}
+
+
+// 🔥 PROGRESS
+function updateProgress(){
+    document.getElementById("progress").innerText =
+        `Tamamlanan: ${usedWords.length} / ${words.length} | Zor: ${hardWords.length}`;
+}
+
+
+// 🔥 RANDOM
+function getPool(){
+
+    if(mode === "hard"){
+        return words.filter(w => hardWords.includes(w.word));
+    }
+
+    return words.filter(w => !usedWords.includes(w.word));
+}
+
+function getRandomWord(){
+
+    let pool = getPool();
+
+    if(pool.length === 0){
+        alert(mode === "hard" ? "Zor kelime yok!" : "Tüm kelimeler bitti!");
+        return null;
+    }
+
+    return pool[Math.floor(Math.random()*pool.length)];
+}
+
+
+// 🔥 QUESTION
+function newQuestion(){
+
+    const w = getRandomWord();
+    if(!w) return;
+
+    let correctAnswer = w.meaning;
+    let optionsPool = words.map(x=>x.meaning);
+
+    let options = [correctAnswer];
+
+    while(options.length < 10){
+        let rand = optionsPool[Math.floor(Math.random()*optionsPool.length)];
+        if(!options.includes(rand)) options.push(rand);
+    }
+
+    options.sort(()=>Math.random()-0.5);
+
+    const box = document.createElement("div");
+    box.className="question-box";
+
+    const q = document.createElement("h3");
+    q.innerText = w.word;
+    box.appendChild(q);
+
+    const optionsDiv = document.createElement("div");
+    optionsDiv.className = "options";
+
+    const res = document.createElement("p");
+
+    options.forEach(opt=>{
+        const btn = document.createElement("button");
+        btn.innerText = opt;
+
+        btn.onclick = ()=>{
+
+            const all = optionsDiv.querySelectorAll("button");
+            all.forEach(b => b.disabled = true);
+
+            if(opt === correctAnswer){
+                btn.style.backgroundColor = "lightgreen";
+                res.innerText = "✅ Doğru";
+                res.className = "correct";
+            } else {
+                btn.style.backgroundColor = "#f8d7da";
+                res.innerText = "❌ Yanlış → " + correctAnswer;
+                res.className = "wrong";
+
+                all.forEach(b=>{
+                    if(b.innerText === correctAnswer){
+                        b.style.backgroundColor = "lightgreen";
+                    }
+                });
+            }
+
+            usedWords.push(w.word);
+            save();
+            updateProgress();
+
+            setTimeout(newQuestion, 600);
+        };
+
+        optionsDiv.appendChild(btn);
+    });
+
+    // ⭐ HARD
+    const hardBtn = document.createElement("button");
+    hardBtn.innerText = "⭐ Bilemedim";
+
+    hardBtn.onclick = ()=>{
+        if(!hardWords.includes(w.word)){
+            hardWords.push(w.word);
+            save();
+            updateProgress();
+        }
+    };
+
+    box.appendChild(optionsDiv);
+    box.appendChild(res);
+    box.appendChild(hardBtn);
+
+    document.getElementById("quizContainer").prepend(box);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+</script>
+
+</body>
+</html>
