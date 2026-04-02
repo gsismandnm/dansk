@@ -222,7 +222,7 @@ function newQuestion(){
 
     let options = [correctAnswer];
 
-    while(options.length < 6){
+    while(options.length < 10){
         let rand = optionsPool[Math.floor(Math.random()*optionsPool.length)];
         if(!options.includes(rand)) options.push(rand);
     }
