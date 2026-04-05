@@ -8,37 +8,19 @@
 <style>
 body { font-family: Arial; padding: 10px; max-width: 900px; margin:auto; }
 
-.header {
-display:flex; justify-content:space-between; align-items:center;
-border-bottom:1px solid #ddd; padding-bottom:8px; margin-bottom:10px;
-}
-
-.header h2 { margin:0; font-size:18px; }
-
-.back-btn {
-padding:6px 10px; border:1px solid #ccc; border-radius:6px;
-background:white; cursor:pointer;
-}
-
-.file-btn {
-width:100%; padding:12px; background:#007bff; color:white;
-border:none; border-radius:8px; margin-bottom:10px;
-}
+.header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
 
 .box { border:1px solid #ccc; padding:12px; border-radius:10px; margin-bottom:12px; }
 
 .word { display:inline-block; padding:8px 12px; margin:6px; background:#eee; border-radius:6px; cursor:pointer; }
+
 .drop { border:2px dashed gray; min-height:60px; padding:10px; margin-top:10px; }
 
-button { margin:6px; padding:10px 12px; cursor:pointer; font-size:15px; border:none; border-radius:8px; }
+button { margin:6px; padding:10px; border-radius:8px; border:none; cursor:pointer; }
 
-.answer-btn { background:#eee; }
 .action-btn { background:#007bff; color:white; }
+.answer-btn { background:#eee; }
 .meaning-btn { background:#f0ad4e; color:white; }
-
-.quiz-header {
-display:flex; align-items:center; gap:10px; margin-bottom:10px;
-}
 </style>
 </head>
 
@@ -46,11 +28,11 @@ display:flex; align-items:center; gap:10px; margin-bottom:10px;
 
 <div class="header">
 <h2>📘 Sætningsøvelser</h2>
-<button class="back-btn" onclick="goHome()">⬅ Tilbage</button>
+<button onclick="goHome()">⬅ Tilbage</button>
 </div>
 
 <input type="file" id="fileInput" hidden>
-<button class="file-btn" onclick="fileInput.click()">📂 Vælg fil</button>
+<button onclick="fileInput.click()">📂 Vælg fil</button>
 
 <div>
 <button onclick="setMode('order')">🧩 Arrangement</button>
@@ -63,11 +45,10 @@ display:flex; align-items:center; gap:10px; margin-bottom:10px;
 
 <script>
 
-function goHome(){
-    window.location.href = "index.html";
-}
+// NAV
+function goHome(){ window.location.href = "index.html"; }
 
-// 🔊
+// SPEAK
 let userInteracted=false;
 document.body.addEventListener("click", ()=>userInteracted=true,{once:true});
 
@@ -76,7 +57,7 @@ function speak(text){
     speechSynthesis.cancel();
     const u=new SpeechSynthesisUtterance(text);
     u.lang="da-DK";
-    setTimeout(()=>speechSynthesis.speak(u),200);
+    speechSynthesis.speak(u);
 }
 
 // TOKEN
@@ -84,7 +65,7 @@ function tokenize(text){
     return text.match(/[\wæøåÆØÅ']+|[.,!?]/g);
 }
 
-// GLOBAL
+// DATA
 let words=[];
 let mode="order";
 
@@ -94,27 +75,25 @@ let stats = {
   fill:{total:0,correct:0,wrong:0}
 };
 
-// 📊
+// STATS
 function updateStats(){
-    let s = stats[mode];
-    let p = s.total ? Math.round(s.correct/s.total*100) : 0;
-    document.getElementById("stats").innerText =
-    `I alt: ${s.total} | Korrekt: ${s.correct} | Forkert: ${s.wrong} | %${p}`;
+    let s=stats[mode];
+    let p=s.total?Math.round(s.correct/s.total*100):0;
+    stats.innerText=`I alt:${s.total} | ✔:${s.correct} | ✖:${s.wrong} | %${p}`;
 }
 
-// 📂 LOAD
+// LOAD FILE
 fileInput.addEventListener("change", e=>{
     const reader=new FileReader();
 
     reader.onload=function(ev){
         const sandbox={};
-
         new Function("sandbox", `
             ${ev.target.result}
             sandbox.data = defaultWords;
         `)(sandbox);
 
-        words = sandbox.data;
+        words=sandbox.data;
 
         stats = {
           order:{total:0,correct:0,wrong:0},
@@ -143,9 +122,8 @@ function rand(arr){
 
 // NEW
 function newExercise(){
-
-    if(words.length < 6){
-        document.getElementById("app").innerText="Vælg en fil med mindst 6 sætninger!";
+    if(words.length<6){
+        app.innerText="Vælg en fil!";
         return;
     }
 
@@ -154,60 +132,48 @@ function newExercise(){
     if(mode==="quiz") box=quiz();
     if(mode==="fill") box=fill();
 
-    const app=document.getElementById("app");
     app.innerHTML="";
     app.appendChild(box);
 }
 
-// 🧩 ORDER (FIXED)
+// 🧩 ORDER
 function order(){
 
-    const s = rand(words);
-    const tokens = tokenize(s.word);
+    const s=rand(words);
+    const tokens=tokenize(s.word);
 
-    let shuffled = [...tokens].sort(()=>Math.random()-0.5);
+    let shuffled=[...tokens].sort(()=>Math.random()-0.5);
 
-    const box = document.createElement("div");
-    box.className = "box";
+    const box=document.createElement("div");
+    box.className="box";
 
-    const speakBtn = document.createElement("button");
-    speakBtn.innerText = "🔊";
-    speakBtn.onclick = ()=>speak(s.word);
-    box.appendChild(speakBtn);
-
-    const drop = document.createElement("div");
-    drop.className = "drop";
+    const drop=document.createElement("div");
+    drop.className="drop";
     box.appendChild(drop);
 
-    const wordBox = document.createElement("div");
-
     shuffled.forEach(w=>{
-        const span = document.createElement("span");
-        span.className = "word";
-        span.innerText = w;
-
-        span.onclick = ()=>drop.appendChild(span);
-
-        wordBox.appendChild(span);
+        const el=document.createElement("span");
+        el.className="word";
+        el.innerText=w;
+        el.onclick=()=>drop.appendChild(el);
+        box.appendChild(el);
     });
 
-    box.appendChild(wordBox);
+    const check=document.createElement("button");
+    check.className="action-btn";
+    check.innerText="✔ Tjek";
 
-    const check = document.createElement("button");
-    check.className = "action-btn";
-    check.innerText = "✔ Tjek";
+    check.onclick=()=>{
+        let user=Array.from(drop.children).map(x=>x.innerText).join(" ");
+        let correct=tokens.join(" ");
 
-    check.onclick = ()=>{
-        let user = Array.from(drop.children).map(x=>x.innerText).join(" ");
-        let correct = tokens.join(" ");
-
-        let sStats = stats.order;
+        let sStats=stats.order;
         sStats.total++;
 
-        if(user === correct){
+        if(user===correct){
             drop.style.background="lightgreen";
             sStats.correct++;
-        } else {
+        }else{
             drop.style.background="#f8d7da";
             sStats.wrong++;
         }
@@ -217,37 +183,69 @@ function order(){
 
     box.appendChild(check);
 
-    const next = document.createElement("button");
-    next.className="action-btn";
-    next.innerText="➡️ Næste";
-    next.onclick=newExercise;
+    return box;
+}
 
-    box.appendChild(next);
+// 📝 QUIZ
+function quiz(){
+
+    const s=rand(words);
+
+    let options=[s.word];
+    while(options.length<6){
+        let r=rand(words).word;
+        if(!options.includes(r)) options.push(r);
+    }
+
+    options.sort(()=>Math.random()-0.5);
+
+    const box=document.createElement("div");
+    box.className="box";
+
+    const speakBtn=document.createElement("button");
+    speakBtn.innerText="🔊";
+    speakBtn.onclick=()=>speak(s.word);
+    box.appendChild(speakBtn);
+
+    options.forEach(opt=>{
+        const btn=document.createElement("button");
+        btn.className="answer-btn";
+        btn.innerText=opt;
+
+        btn.onclick=()=>{
+            let sStats=stats.quiz;
+            sStats.total++;
+
+            if(opt===s.word){
+                btn.style.background="lightgreen";
+                sStats.correct++;
+            }else{
+                btn.style.background="#f8d7da";
+                sStats.wrong++;
+            }
+
+            updateStats();
+        };
+
+        box.appendChild(btn);
+    });
 
     return box;
 }
 
-// 📝 QUIZ (aynı)
-function quiz(){ /* senin kod aynen */ return fill(); }
-
-// ✏️ FILL (aynı)
+// ✏️ FILL
 function fill(){
 
     const s=rand(words);
     const tokens=tokenize(s.word);
 
-    let wordIndexes=tokens.map((t,i)=>({t,i})).filter(x=>!/^[.,!?]$/.test(x.t));
-    let pick=rand(wordIndexes);
-
-    const answer=pick.t;
-    tokens[pick.i]="_____";
-
-    let pool=words.flatMap(x=>tokenize(x.word))
-        .filter(w=>!/^[.,!?]$/.test(w) && w!==answer);
+    let idx=Math.floor(Math.random()*tokens.length);
+    let answer=tokens[idx];
+    tokens[idx]="_____";
 
     let options=[answer];
     while(options.length<6){
-        let r=rand(pool);
+        let r=rand(words).word.split(" ")[0];
         if(!options.includes(r)) options.push(r);
     }
 
@@ -260,24 +258,19 @@ function fill(){
     q.innerText=tokens.join(" ");
     box.appendChild(q);
 
-    let answered=false;
-
     options.forEach(opt=>{
         const btn=document.createElement("button");
         btn.className="answer-btn";
         btn.innerText=opt;
 
         btn.onclick=()=>{
-            if(answered) return;
-            answered=true;
-
-            let sStats = stats.fill;
+            let sStats=stats.fill;
             sStats.total++;
 
             if(opt===answer){
                 btn.style.background="lightgreen";
                 sStats.correct++;
-            } else {
+            }else{
                 btn.style.background="#f8d7da";
                 sStats.wrong++;
             }
