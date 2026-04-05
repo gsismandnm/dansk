@@ -73,6 +73,12 @@ button {
     color: white;
 }
 
+/* 🆕 OKUMA BUTONU */
+.btn-reading {
+    background: #ff9800;
+    color: white;
+}
+
 button:active {
     transform: scale(0.97);
 }
@@ -161,6 +167,11 @@ button:active {
         🧩 Sætningsøvelse
     </button>
 
+    <!-- 🆕 OKUMA -->
+    <button class="btn-reading" onclick="goReading()">
+        📖 Læseøvelse
+    </button>
+
 </div>
 
 <!-- 🔒 OVERLAY -->
@@ -195,6 +206,11 @@ function goWord(){
 
 function goSentence(){
     window.location.href = "sentence.html";
+}
+
+/* 🆕 OKUMA SAYFASI */
+function goReading(){
+    window.location.href = "reading.html";
 }
 
 // CHECKBOX
