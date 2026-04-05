@@ -156,6 +156,29 @@ button {
 
 <script>
 
+// 🔊 GELİŞMİŞ SES
+function speak(text){
+
+    const utter = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+
+    let voice = voices.find(v => v.lang === "da-DK");
+
+    if(!voice){
+        voice = voices.find(v => v.lang.startsWith("en"));
+    }
+
+    if(voice){
+        utter.voice = voice;
+    }
+
+    utter.rate = 0.9;
+    utter.pitch = 1;
+
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
+}
+
 // 🔙 ANA SAYFA
 function goHome(){
     window.location.href = "index.html";
@@ -312,7 +335,18 @@ function newQuestion(){
 
     const q = document.createElement("h3");
     q.innerText = w.word;
+
+    // 🔊 BUTON
+    const speakBtn = document.createElement("button");
+    speakBtn.innerText = "🔊";
+    speakBtn.style.marginLeft = "10px";
+    speakBtn.onclick = ()=> speak(w.word);
+
+    q.appendChild(speakBtn);
     box.appendChild(q);
+
+    // 🔊 OTOMATİK OKU
+    speak(w.word);
 
     const optionsDiv = document.createElement("div");
     optionsDiv.className = "options";
