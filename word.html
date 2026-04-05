@@ -14,7 +14,6 @@ body {
     margin: auto;
 }
 
-/* 🔝 HEADER */
 .header {
     display: flex;
     align-items: center;
@@ -41,7 +40,6 @@ body {
     color: #555;
 }
 
-/* 🔙 TILBAGE */
 .back-btn {
     font-size: 14px;
     padding: 6px 10px;
@@ -51,7 +49,6 @@ body {
     cursor: pointer;
 }
 
-/* 📂 DOSYA */
 .file-btn {
     width: 100%;
     padding: 12px;
@@ -64,7 +61,6 @@ body {
     cursor: pointer;
 }
 
-/* BUTON GRUBU */
 .top-buttons {
     display: flex;
     flex-wrap: wrap;
@@ -82,13 +78,11 @@ body {
     cursor: pointer;
 }
 
-/* PROGRESS */
 #progress {
     font-size: 14px;
     margin-bottom: 10px;
 }
 
-/* SORU */
 .question-box {
     border: 1px solid #ddd;
     padding: 12px;
@@ -96,7 +90,6 @@ body {
     border-radius: 8px;
 }
 
-/* ŞIKLAR */
 .options {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
@@ -124,7 +117,6 @@ button {
 
 <body>
 
-<!-- 🔝 HEADER -->
 <div class="header">
     <div class="header-left">
         <h2>📚 Danskindlæring</h2>
@@ -133,7 +125,6 @@ button {
     <button class="back-btn" onclick="goHome()">⬅ Tilbage</button>
 </div>
 
-<!-- 📂 DOSYA -->
 <input type="file" id="fileInput" hidden>
 
 <button class="file-btn" onclick="document.getElementById('fileInput').click()">
@@ -142,7 +133,6 @@ button {
 
 <p id="fileName"></p>
 
-<!-- 🔘 MOD BUTONLARI -->
 <div class="top-buttons">
     <button onclick="setMode('all')">📚 Alle</button>
     <button onclick="setMode('hard')">⭐ Svære</button>
@@ -156,22 +146,15 @@ button {
 
 <script>
 
-// 🔊 GOOGLE TTS + FALLBACK
+// 🔊 SES (Google TTS + fallback)
 function speak(text){
-
     try {
-
-        // Google TTS
         const url = "https://translate.google.com/translate_tts?ie=UTF-8&q=" 
-            + encodeURIComponent(text) 
-            + "&tl=da&client=tw-ob";
+            + encodeURIComponent(text) + "&tl=da&client=tw-ob";
 
         const audio = new Audio(url);
         audio.play();
-
     } catch(e){
-
-        // fallback (browser TTS)
         const utter = new SpeechSynthesisUtterance(text);
         utter.lang = "da-DK";
         speechSynthesis.speak(utter);
@@ -185,11 +168,9 @@ function goHome(){
 
 let words = [];
 let currentFile = "";
-
 let usedWords = [];
 let hardWords = [];
 let wrongWords = [];
-
 let mode = "all";
 
 function getKey(name){
@@ -208,7 +189,6 @@ function save(){
     localStorage.setItem(getKey("wrongWords"), JSON.stringify(wrongWords));
 }
 
-// DOSYA
 document.getElementById("fileInput").addEventListener("change", function(e){
 
     const file = e.target.files[0];
@@ -253,14 +233,12 @@ document.getElementById("fileInput").addEventListener("change", function(e){
     reader.readAsText(file);
 });
 
-// MODE
 function setMode(m){
     mode = m;
     document.getElementById("quizContainer").innerHTML = "";
     newQuestion();
 }
 
-// RESET
 function resetProgress(){
 
     if(!currentFile) return;
@@ -276,40 +254,28 @@ function resetProgress(){
     newQuestion();
 }
 
-// PROGRESS
 function updateProgress(){
     document.getElementById("progress").innerText =
         `✔ ${usedWords.length}/${words.length} | ⭐ ${hardWords.length} | ❌ ${wrongWords.length}`;
 }
 
-// POOL
 function getPool(){
-
-    if(mode === "hard"){
-        return words.filter(w => hardWords.includes(w.word));
-    }
-
-    if(mode === "wrong"){
-        return words.filter(w => wrongWords.includes(w.word));
-    }
-
+    if(mode === "hard") return words.filter(w => hardWords.includes(w.word));
+    if(mode === "wrong") return words.filter(w => wrongWords.includes(w.word));
     return words.filter(w => !usedWords.includes(w.word));
 }
 
 function getRandomWord(){
-
     let pool = getPool();
-
     if(pool.length === 0){
         alert("Alle ordene er gennemført!");
         return null;
     }
-
     return pool[Math.floor(Math.random()*pool.length)];
 }
 
-// SORU
-function newQuestion(){
+// 🔥 ANA SORU
+function newQuestion(speakWord = null){
 
     const w = getRandomWord();
     if(!w) return;
@@ -317,7 +283,6 @@ function newQuestion(){
     let correctAnswer = w.meaning;
 
     let optionsPool = [...new Set(words.map(x=>x.meaning))];
-
     let options = [correctAnswer];
 
     while(options.length < 8){
@@ -335,7 +300,6 @@ function newQuestion(){
     const q = document.createElement("h3");
     q.innerText = w.word;
 
-    // 🔊 BUTON
     const speakBtn = document.createElement("button");
     speakBtn.innerText = "🔊";
     speakBtn.style.marginLeft = "10px";
@@ -343,9 +307,6 @@ function newQuestion(){
 
     q.appendChild(speakBtn);
     box.appendChild(q);
-
-    // 🔊 OTOMATİK OKU
-    speak(w.word);
 
     const optionsDiv = document.createElement("div");
     optionsDiv.className = "options";
@@ -362,13 +323,24 @@ function newQuestion(){
             all.forEach(b => b.disabled = true);
 
             if(opt === correctAnswer){
+
                 btn.style.backgroundColor = "lightgreen";
                 res.innerText = "✅ Korrekt";
                 res.className = "correct";
 
                 wrongWords = wrongWords.filter(x => x !== w.word);
 
+                if(!usedWords.includes(w.word)){
+                    usedWords.push(w.word);
+                }
+
+                save();
+                updateProgress();
+
+                setTimeout(()=> newQuestion(), 700);
+
             } else {
+
                 btn.style.backgroundColor = "#f8d7da";
                 res.innerText = "❌ " + correctAnswer;
                 res.className = "wrong";
@@ -377,29 +349,22 @@ function newQuestion(){
                     wrongWords.push(w.word);
                 }
 
-                all.forEach(b=>{
-                    if(b.innerText === correctAnswer){
-                        b.style.backgroundColor = "lightgreen";
-                    }
-                });
+                save();
+                updateProgress();
+
+                // 🔥 yeni soru + ses
+                setTimeout(()=> newQuestion(true), 700);
             }
-
-            if(!usedWords.includes(w.word)){
-                usedWords.push(w.word);
-            }
-
-            save();
-            updateProgress();
-
-            setTimeout(newQuestion, 700);
         };
 
         optionsDiv.appendChild(btn);
     });
 
+    box.appendChild(optionsDiv);
+    box.appendChild(res);
+
     const hardBtn = document.createElement("button");
     hardBtn.innerText = "⭐ Svært";
-
     hardBtn.onclick = ()=>{
         if(!hardWords.includes(w.word)){
             hardWords.push(w.word);
@@ -408,11 +373,14 @@ function newQuestion(){
         }
     };
 
-    box.appendChild(optionsDiv);
-    box.appendChild(res);
     box.appendChild(hardBtn);
 
     document.getElementById("quizContainer").prepend(box);
+
+    // 🔊 sadece yanlış sonrası
+    if(speakWord){
+        speak(w.word);
+    }
 
     window.scrollTo({ top: 0, behavior: "smooth" });
 }
