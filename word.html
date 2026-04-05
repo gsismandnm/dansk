@@ -224,9 +224,9 @@ function getRandomWord(){
 }
 
 // 🔥 SORU
-function newQuestion(){
+function newQuestion(nextWord = null){
 
-    const w = getRandomWord();
+    const w = nextWord || getRandomWord();
     if(!w) return;
 
     const correctAnswer = w.meaning;
@@ -274,7 +274,7 @@ function newQuestion(){
                 btn.style.backgroundColor = "lightgreen";
                 res.innerText = "✅ Korrekt";
 
-                // 🔊 DOĞRU → kelimeyi oku
+                // 🔊 DOĞRU → tekrar
                 speak(w.word);
 
                 if(!usedWords.includes(w.word)){
@@ -283,23 +283,35 @@ function newQuestion(){
 
                 wrongWords = wrongWords.filter(x=>x!==w.word);
 
+                save();
+                updateProgress();
+
+                setTimeout(newQuestion, 800);
+
             } else {
 
                 btn.style.backgroundColor = "#f8d7da";
                 res.innerText = "❌ " + correctAnswer;
 
-                // 🔊 YANLIŞ → doğru cevabı oku
-                speak(correctAnswer);
-
                 if(!wrongWords.includes(w.word)){
                     wrongWords.push(w.word);
                 }
+
+                save();
+                updateProgress();
+
+                // 🔥 YENİ KELİMEYİ ÖNCEDEN AL
+                const next = getRandomWord();
+
+                if(next){
+                    // 🔊 DANCA OKU (click içinde!)
+                    speak(next.word);
+
+                    setTimeout(()=> newQuestion(next), 800);
+                } else {
+                    setTimeout(newQuestion, 800);
+                }
             }
-
-            save();
-            updateProgress();
-
-            setTimeout(newQuestion, 800);
         };
 
         optionsDiv.appendChild(btn);
