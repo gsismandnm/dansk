@@ -334,7 +334,7 @@ function newQuestion(){
     // 🔊 3 SANİYE SONRA OKU
     setTimeout(()=>{
         speak(w.word);
-    }, 1000);
+    }, 100);
 
     const optionsDiv = document.createElement("div");
     optionsDiv.className = "options";
@@ -379,7 +379,7 @@ function newQuestion(){
             updateProgress();
 
             // ⏱ 3 saniye sonra yeni soru
-            setTimeout(newQuestion, 500);
+            setTimeout(newQuestion, 100);
         };
 
         optionsDiv.appendChild(btn);
