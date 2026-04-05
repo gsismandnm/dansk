@@ -156,26 +156,12 @@ button {
 
 <script>
 
-// 🔊 GOOGLE TTS + FALLBACK
+// 🔊 SES FONKSİYONU
 function speak(text){
-
-    try {
-
-        // Google TTS
-        const url = "https://translate.google.com/translate_tts?ie=UTF-8&q=" 
-            + encodeURIComponent(text) 
-            + "&tl=da&client=tw-ob";
-
-        const audio = new Audio(url);
-        audio.play();
-
-    } catch(e){
-
-        // fallback (browser TTS)
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = "da-DK";
-        speechSynthesis.speak(utter);
-    }
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "da-DK";
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
 }
 
 // 🔙 ANA SAYFA
@@ -346,7 +332,7 @@ function newQuestion(){
 
     // 🔊 OTOMATİK OKU
     speak(w.word);
-    
+
     const optionsDiv = document.createElement("div");
     optionsDiv.className = "options";
 
