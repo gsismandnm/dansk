@@ -1,0 +1,390 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+
+<title>Ordøvelse</title>
+
+<style>
+body {
+    font-family: Arial;
+    padding: 10px;
+    max-width: 900px;
+    margin: auto;
+}
+
+/* 🔝 HEADER */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
+}
+
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+#titleInline {
+    font-size: 14px;
+    font-weight: bold;
+    color: #555;
+}
+
+/* 🔙 TILBAGE */
+.back-btn {
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+}
+
+/* 📂 DOSYA */
+.file-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #007bff;
+    color: white;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+/* BUTON GRUBU */
+.top-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.top-buttons button {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+}
+
+/* PROGRESS */
+#progress {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* SORU */
+.question-box {
+    border: 1px solid #ddd;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+}
+
+/* ŞIKLAR */
+.options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+}
+
+@media (min-width: 600px){
+    .options {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+button {
+    padding: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.correct { color: green; }
+.wrong { color: red; }
+
+</style>
+</head>
+
+<body>
+
+<!-- 🔝 HEADER -->
+<div class="header">
+    <div class="header-left">
+        <h2>📚 Danskindlæring</h2>
+        <span id="titleInline"></span>
+    </div>
+    <button class="back-btn" onclick="goHome()">⬅ Tilbage</button>
+</div>
+
+<!-- 📂 DOSYA -->
+<input type="file" id="fileInput" hidden>
+
+<button class="file-btn" onclick="document.getElementById('fileInput').click()">
+📂 Vælg fil
+</button>
+
+<p id="fileName"></p>
+
+<!-- 🔘 MOD BUTONLARI -->
+<div class="top-buttons">
+    <button onclick="setMode('all')">📚 Alle</button>
+    <button onclick="setMode('hard')">⭐ Svære</button>
+    <button onclick="setMode('wrong')">❌ Fejl</button>
+    <button onclick="resetProgress()">🔄 Nulstil</button>
+</div>
+
+<p id="progress"></p>
+
+<div id="quizContainer"></div>
+
+<script>
+
+// 🔙 ANA SAYFA
+function goHome(){
+    window.location.href = "index.html";
+}
+
+let words = [];
+let currentFile = "";
+
+let usedWords = [];
+let hardWords = [];
+let wrongWords = [];
+
+let mode = "all";
+
+function getKey(name){
+    return name + "_" + currentFile;
+}
+
+function loadStorage(){
+    usedWords = JSON.parse(localStorage.getItem(getKey("usedWords"))) || [];
+    hardWords = JSON.parse(localStorage.getItem(getKey("hardWords"))) || [];
+    wrongWords = JSON.parse(localStorage.getItem(getKey("wrongWords"))) || [];
+}
+
+function save(){
+    localStorage.setItem(getKey("usedWords"), JSON.stringify(usedWords));
+    localStorage.setItem(getKey("hardWords"), JSON.stringify(hardWords));
+    localStorage.setItem(getKey("wrongWords"), JSON.stringify(wrongWords));
+}
+
+// DOSYA
+document.getElementById("fileInput").addEventListener("change", function(e){
+
+    const file = e.target.files[0];
+    if(!file) return;
+
+    document.getElementById("fileName").innerText = "Valgt: " + file.name;
+
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+
+        try {
+            const text = event.target.result;
+
+            const sandbox = {};
+            const func = new Function("sandbox", `
+                ${text}
+                sandbox.data = defaultWords;
+                sandbox.title = typeof title !== 'undefined' ? title : "";
+            `);
+
+            func(sandbox);
+
+            words = sandbox.data;
+            currentFile = file.name;
+
+            document.getElementById("titleInline").innerText = sandbox.title || "";
+
+            loadStorage();
+            updateProgress();
+
+            document.getElementById("quizContainer").innerHTML = "";
+
+            newQuestion();
+
+        } catch(e){
+            alert("Dosya okunamadı!");
+        }
+
+    };
+
+    reader.readAsText(file);
+});
+
+// MODE
+function setMode(m){
+    mode = m;
+    document.getElementById("quizContainer").innerHTML = "";
+    newQuestion();
+}
+
+// RESET
+function resetProgress(){
+
+    if(!currentFile) return;
+
+    localStorage.removeItem(getKey("usedWords"));
+    localStorage.removeItem(getKey("hardWords"));
+    localStorage.removeItem(getKey("wrongWords"));
+
+    loadStorage();
+    updateProgress();
+
+    document.getElementById("quizContainer").innerHTML = "";
+    newQuestion();
+}
+
+// PROGRESS
+function updateProgress(){
+    document.getElementById("progress").innerText =
+        `✔ ${usedWords.length}/${words.length} | ⭐ ${hardWords.length} | ❌ ${wrongWords.length}`;
+}
+
+// POOL
+function getPool(){
+
+    if(mode === "hard"){
+        return words.filter(w => hardWords.includes(w.word));
+    }
+
+    if(mode === "wrong"){
+        return words.filter(w => wrongWords.includes(w.word));
+    }
+
+    return words.filter(w => !usedWords.includes(w.word));
+}
+
+function getRandomWord(){
+
+    let pool = getPool();
+
+    if(pool.length === 0){
+        alert("Alle ordene er gennemført!");
+        return null;
+    }
+
+    return pool[Math.floor(Math.random()*pool.length)];
+}
+
+// SORU
+function newQuestion(){
+
+    const w = getRandomWord();
+    if(!w) return;
+
+    let correctAnswer = w.meaning;
+
+    let optionsPool = [...new Set(words.map(x=>x.meaning))];
+
+    let options = [correctAnswer];
+
+    while(options.length < 8){
+        let rand = optionsPool[Math.floor(Math.random()*optionsPool.length)];
+        if(rand !== correctAnswer && !options.includes(rand)){
+            options.push(rand);
+        }
+    }
+
+    options.sort(()=>Math.random()-0.5);
+
+    const box = document.createElement("div");
+    box.className="question-box";
+
+    const q = document.createElement("h3");
+    q.innerText = w.word;
+    box.appendChild(q);
+
+    const optionsDiv = document.createElement("div");
+    optionsDiv.className = "options";
+
+    const res = document.createElement("p");
+
+    options.forEach(opt=>{
+        const btn = document.createElement("button");
+        btn.innerText = opt;
+
+        btn.onclick = ()=>{
+
+            const all = optionsDiv.querySelectorAll("button");
+            all.forEach(b => b.disabled = true);
+
+            if(opt === correctAnswer){
+                btn.style.backgroundColor = "lightgreen";
+                res.innerText = "✅ Korrekt";
+                res.className = "correct";
+
+                wrongWords = wrongWords.filter(x => x !== w.word);
+
+            } else {
+                btn.style.backgroundColor = "#f8d7da";
+                res.innerText = "❌ " + correctAnswer;
+                res.className = "wrong";
+
+                if(!wrongWords.includes(w.word)){
+                    wrongWords.push(w.word);
+                }
+
+                all.forEach(b=>{
+                    if(b.innerText === correctAnswer){
+                        b.style.backgroundColor = "lightgreen";
+                    }
+                });
+            }
+
+            if(!usedWords.includes(w.word)){
+                usedWords.push(w.word);
+            }
+
+            save();
+            updateProgress();
+
+            setTimeout(newQuestion, 700);
+        };
+
+        optionsDiv.appendChild(btn);
+    });
+
+    const hardBtn = document.createElement("button");
+    hardBtn.innerText = "⭐ Svært";
+
+    hardBtn.onclick = ()=>{
+        if(!hardWords.includes(w.word)){
+            hardWords.push(w.word);
+            save();
+            updateProgress();
+        }
+    };
+
+    box.appendChild(optionsDiv);
+    box.appendChild(res);
+    box.appendChild(hardBtn);
+
+    document.getElementById("quizContainer").prepend(box);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
+
+</script>
+
+</body>
+</html>
