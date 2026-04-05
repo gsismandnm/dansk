@@ -156,27 +156,26 @@ button {
 
 <script>
 
-// 🔊 GELİŞMİŞ SES
+// 🔊 GOOGLE TTS + FALLBACK
 function speak(text){
 
-    const utter = new SpeechSynthesisUtterance(text);
-    const voices = speechSynthesis.getVoices();
+    try {
 
-    let voice = voices.find(v => v.lang === "da-DK");
+        // Google TTS
+        const url = "https://translate.google.com/translate_tts?ie=UTF-8&q=" 
+            + encodeURIComponent(text) 
+            + "&tl=da&client=tw-ob";
 
-    if(!voice){
-        voice = voices.find(v => v.lang.startsWith("en"));
+        const audio = new Audio(url);
+        audio.play();
+
+    } catch(e){
+
+        // fallback (browser TTS)
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = "da-DK";
+        speechSynthesis.speak(utter);
     }
-
-    if(voice){
-        utter.voice = voice;
-    }
-
-    utter.rate = 0.9;
-    utter.pitch = 1;
-
-    speechSynthesis.cancel();
-    speechSynthesis.speak(utter);
 }
 
 // 🔙 ANA SAYFA
