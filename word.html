@@ -3,16 +3,10 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-
 <title>Ordøvelse</title>
 
 <style>
-body {
-    font-family: Arial;
-    padding: 10px;
-    max-width: 900px;
-    margin: auto;
-}
+body { font-family: Arial; padding: 10px; max-width: 900px; margin: auto; }
 
 .header {
     display: flex;
@@ -29,16 +23,9 @@ body {
     gap: 8px;
 }
 
-.header h2 {
-    margin: 0;
-    font-size: 18px;
-}
+.header h2 { margin: 0; font-size: 18px; }
 
-#titleInline {
-    font-size: 14px;
-    font-weight: bold;
-    color: #555;
-}
+#titleInline { font-size: 14px; font-weight: bold; color: #555; }
 
 .back-btn {
     font-size: 14px;
@@ -46,19 +33,15 @@ body {
     border-radius: 6px;
     border: 1px solid #ccc;
     background: white;
-    cursor: pointer;
 }
 
 .file-btn {
     width: 100%;
     padding: 12px;
-    font-size: 15px;
     border-radius: 8px;
-    border: 1px solid #ccc;
     background: #007bff;
     color: white;
     margin-bottom: 10px;
-    cursor: pointer;
 }
 
 .top-buttons {
@@ -71,17 +54,12 @@ body {
 .top-buttons button {
     flex: 1;
     padding: 10px;
-    font-size: 14px;
     border-radius: 6px;
     border: 1px solid #ccc;
     background: white;
-    cursor: pointer;
 }
 
-#progress {
-    font-size: 14px;
-    margin-bottom: 10px;
-}
+#progress { margin-bottom: 10px; }
 
 .question-box {
     border: 1px solid #ddd;
@@ -97,17 +75,7 @@ body {
     margin-top: 10px;
 }
 
-@media (min-width: 600px){
-    .options {
-        grid-template-columns: repeat(5, 1fr);
-    }
-}
-
-button {
-    padding: 10px;
-    font-size: 14px;
-    cursor: pointer;
-}
+button { cursor: pointer; }
 
 .correct { color: green; }
 .wrong { color: red; }
@@ -126,10 +94,7 @@ button {
 </div>
 
 <input type="file" id="fileInput" hidden>
-
-<button class="file-btn" onclick="document.getElementById('fileInput').click()">
-📂 Vælg fil
-</button>
+<button class="file-btn" onclick="fileInput.click()">📂 Vælg fil</button>
 
 <p id="fileName"></p>
 
@@ -144,35 +109,17 @@ button {
 
 <div id="quizContainer"></div>
 
-<!-- 🔊 AUDIO PLAYER -->
-<audio id="ttsPlayer"></audio>
-
 <script>
 
-// 🔊 SES (iPhone FIX)
+// 🔊 %100 STABLE SPEAK
 function speak(text){
-
-    const player = document.getElementById("ttsPlayer");
-
-    const url = "https://translate.google.com/translate_tts?ie=UTF-8&q="
-        + encodeURIComponent(text)
-        + "&tl=da&client=tw-ob";
-
-    player.src = url;
-    player.play().catch(()=>{});
+    const utter = new SpeechSynthesisUtterance(text);
+    utter.lang = "da-DK";
+    speechSynthesis.cancel();
+    speechSynthesis.speak(utter);
 }
 
-// 🔓 iPhone unlock
-let unlocked = false;
-document.body.addEventListener("click", () => {
-    if(!unlocked){
-        const player = document.getElementById("ttsPlayer");
-        player.play().catch(()=>{});
-        unlocked = true;
-    }
-}, { once: true });
-
-// 🔙 ANA SAYFA
+// NAV
 function goHome(){
     window.location.href = "index.html";
 }
@@ -200,23 +147,20 @@ function save(){
     localStorage.setItem(getKey("wrongWords"), JSON.stringify(wrongWords));
 }
 
-document.getElementById("fileInput").addEventListener("change", function(e){
-
+// FILE
+fileInput.addEventListener("change", e=>{
     const file = e.target.files[0];
     if(!file) return;
 
-    document.getElementById("fileName").innerText = "Valgt: " + file.name;
+    fileName.innerText = "Valgt: " + file.name;
 
     const reader = new FileReader();
 
-    reader.onload = function(event){
-
+    reader.onload = e=>{
         try {
-            const text = event.target.result;
-
             const sandbox = {};
             const func = new Function("sandbox", `
-                ${text}
+                ${e.target.result}
                 sandbox.data = defaultWords;
                 sandbox.title = typeof title !== 'undefined' ? title : "";
             `);
@@ -226,19 +170,17 @@ document.getElementById("fileInput").addEventListener("change", function(e){
             words = sandbox.data;
             currentFile = file.name;
 
-            document.getElementById("titleInline").innerText = sandbox.title || "";
+            titleInline.innerText = sandbox.title || "";
 
             loadStorage();
             updateProgress();
 
-            document.getElementById("quizContainer").innerHTML = "";
-
+            quizContainer.innerHTML = "";
             newQuestion();
 
-        } catch(e){
+        } catch {
             alert("Dosya okunamadı!");
         }
-
     };
 
     reader.readAsText(file);
@@ -246,27 +188,23 @@ document.getElementById("fileInput").addEventListener("change", function(e){
 
 function setMode(m){
     mode = m;
-    document.getElementById("quizContainer").innerHTML = "";
+    quizContainer.innerHTML = "";
     newQuestion();
 }
 
 function resetProgress(){
-
     if(!currentFile) return;
 
-    localStorage.removeItem(getKey("usedWords"));
-    localStorage.removeItem(getKey("hardWords"));
-    localStorage.removeItem(getKey("wrongWords"));
-
+    localStorage.clear();
     loadStorage();
     updateProgress();
 
-    document.getElementById("quizContainer").innerHTML = "";
+    quizContainer.innerHTML = "";
     newQuestion();
 }
 
 function updateProgress(){
-    document.getElementById("progress").innerText =
+    progress.innerText =
         `✔ ${usedWords.length}/${words.length} | ⭐ ${hardWords.length} | ❌ ${wrongWords.length}`;
 }
 
@@ -277,43 +215,42 @@ function getPool(){
 }
 
 function getRandomWord(){
-    let pool = getPool();
+    const pool = getPool();
     if(pool.length === 0){
-        alert("Alle ordene er gennemført!");
+        alert("Alle ordene er færdige!");
         return null;
     }
     return pool[Math.floor(Math.random()*pool.length)];
 }
 
-// 🔥 ANA SORU
-function newQuestion(playSound = false){
+// 🔥 CORE
+function newQuestion(){
 
     const w = getRandomWord();
     if(!w) return;
 
-    let correctAnswer = w.meaning;
+    const correctAnswer = w.meaning;
 
-    let optionsPool = [...new Set(words.map(x=>x.meaning))];
     let options = [correctAnswer];
+    const pool = [...new Set(words.map(x=>x.meaning))];
 
-    while(options.length < 8){
-        let rand = optionsPool[Math.floor(Math.random()*optionsPool.length)];
-        if(rand !== correctAnswer && !options.includes(rand)){
-            options.push(rand);
+    while(options.length < 6){
+        let r = pool[Math.floor(Math.random()*pool.length)];
+        if(r !== correctAnswer && !options.includes(r)){
+            options.push(r);
         }
     }
 
     options.sort(()=>Math.random()-0.5);
 
     const box = document.createElement("div");
-    box.className="question-box";
+    box.className = "question-box";
 
     const q = document.createElement("h3");
     q.innerText = w.word;
 
     const speakBtn = document.createElement("button");
     speakBtn.innerText = "🔊";
-    speakBtn.style.marginLeft = "10px";
     speakBtn.onclick = ()=> speak(w.word);
 
     q.appendChild(speakBtn);
@@ -330,31 +267,28 @@ function newQuestion(playSound = false){
 
         btn.onclick = ()=>{
 
-            const all = optionsDiv.querySelectorAll("button");
-            all.forEach(b => b.disabled = true);
+            optionsDiv.querySelectorAll("button").forEach(b=>b.disabled=true);
 
             if(opt === correctAnswer){
 
                 btn.style.backgroundColor = "lightgreen";
                 res.innerText = "✅ Korrekt";
-                res.className = "correct";
-
-                wrongWords = wrongWords.filter(x => x !== w.word);
 
                 if(!usedWords.includes(w.word)){
                     usedWords.push(w.word);
                 }
 
+                wrongWords = wrongWords.filter(x=>x!==w.word);
+
                 save();
                 updateProgress();
 
-                setTimeout(()=> newQuestion(false), 700);
+                setTimeout(newQuestion, 700);
 
             } else {
 
                 btn.style.backgroundColor = "#f8d7da";
                 res.innerText = "❌ " + correctAnswer;
-                res.className = "wrong";
 
                 if(!wrongWords.includes(w.word)){
                     wrongWords.push(w.word);
@@ -363,7 +297,13 @@ function newQuestion(playSound = false){
                 save();
                 updateProgress();
 
-                setTimeout(()=> newQuestion(true), 700);
+                // 🔊 CRITICAL FIX → CLICK İÇİNDE
+                const next = getRandomWord();
+                if(next){
+                    speak(next.word);
+                }
+
+                setTimeout(newQuestion, 700);
             }
         };
 
@@ -373,26 +313,7 @@ function newQuestion(playSound = false){
     box.appendChild(optionsDiv);
     box.appendChild(res);
 
-    const hardBtn = document.createElement("button");
-    hardBtn.innerText = "⭐ Svært";
-    hardBtn.onclick = ()=>{
-        if(!hardWords.includes(w.word)){
-            hardWords.push(w.word);
-            save();
-            updateProgress();
-        }
-    };
-
-    box.appendChild(hardBtn);
-
-    document.getElementById("quizContainer").prepend(box);
-
-    // 🔊 sadece yanlış sonrası
-    if(playSound){
-        speak(w.word);
-    }
-
-    window.scrollTo({ top: 0, behavior: "smooth" });
+    quizContainer.prepend(box);
 }
 
 </script>
