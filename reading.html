@@ -67,8 +67,8 @@ body { margin:0; font-family:Arial; background:#f5f6fa; }
 
 <button class="btn-dark" onclick="goBack()">⬅</button>
 
-<input type="file" id="fileInput" hidden>
-<button class="btn-blue" onclick="fileInput.click()">📂</button>
+<input type="file" id="fileInput" accept=".js" style="display:none">
+<button class="btn-blue" onclick="document.getElementById('fileInput').click()">📂</button>
 
 <select id="textSelect"></select>
 
@@ -101,7 +101,7 @@ function goBack(){
     window.location.href="index.html";
 }
 
-fileInput.addEventListener("change", e=>{
+document.getElementById("fileInput").addEventListener("change", e=>{
     const reader=new FileReader();
     reader.onload=function(){
         eval(reader.result);
