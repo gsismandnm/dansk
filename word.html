@@ -6,12 +6,18 @@
 <title>Ordøvelse</title>
 
 <style>
-body { font-family: Arial; padding: 10px; max-width: 900px; margin: auto; }
+body {
+    font-family: Arial;
+    padding: 10px;
+    max-width: 900px;
+    margin: auto;
+}
 
+/* HEADER */
 .header {
     display: flex;
-    align-items: center;
     justify-content: space-between;
+    align-items: center;
     border-bottom: 1px solid #ddd;
     padding-bottom: 8px;
     margin-bottom: 10px;
@@ -25,58 +31,83 @@ body { font-family: Arial; padding: 10px; max-width: 900px; margin: auto; }
 
 .header h2 { margin: 0; font-size: 18px; }
 
-#titleInline { font-size: 14px; font-weight: bold; color: #555; }
-
-.back-btn {
+#titleInline {
     font-size: 14px;
+    font-weight: bold;
+    color: #555;
+}
+
+/* BACK */
+.back-btn {
     padding: 6px 10px;
-    border-radius: 6px;
     border: 1px solid #ccc;
+    border-radius: 6px;
     background: white;
 }
 
+/* FILE */
 .file-btn {
     width: 100%;
-    padding: 12px;
+    padding: 14px;
+    font-size: 16px;
     border-radius: 8px;
     background: #007bff;
     color: white;
     margin-bottom: 10px;
 }
 
+/* TOP BUTTONS */
 .top-buttons {
     display: flex;
-    flex-wrap: wrap;
     gap: 6px;
     margin-bottom: 10px;
 }
 
 .top-buttons button {
     flex: 1;
-    padding: 10px;
+    padding: 12px;
+    font-size: 15px;
     border-radius: 6px;
     border: 1px solid #ccc;
     background: white;
 }
 
-#progress { margin-bottom: 10px; }
-
+/* QUESTION */
 .question-box {
     border: 1px solid #ddd;
-    padding: 12px;
+    padding: 14px;
     margin-bottom: 12px;
     border-radius: 8px;
 }
 
+.question-box h3 {
+    font-size: 20px;
+}
+
+/* OPTIONS (BÜYÜTÜLDÜ) */
 .options {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 6px;
-    margin-top: 10px;
+    gap: 10px;
+    margin-top: 12px;
 }
 
-button { cursor: pointer; }
+@media (min-width: 600px){
+    .options {
+        grid-template-columns: repeat(4, 1fr);
+    }
+}
 
+/* OPTION BUTTON */
+.options button {
+    padding: 16px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: white;
+}
+
+/* RESULT */
 .correct { color: green; }
 .wrong { color: red; }
 
@@ -111,15 +142,28 @@ button { cursor: pointer; }
 
 <script>
 
-// 🔊 SES (iPhone uyumlu)
+// 🔊 EN İYİ SES (Sara zorlanır)
 function speak(text){
+
     const utter = new SpeechSynthesisUtterance(text);
+    const voices = speechSynthesis.getVoices();
+
+    let voice =
+        voices.find(v => v.name.includes("Sara") && v.lang === "da-DK") ||
+        voices.find(v => v.lang === "da-DK");
+
+    if(voice) utter.voice = voice;
+
     utter.lang = "da-DK";
+    utter.rate = 0.9;
+
     speechSynthesis.cancel();
     speechSynthesis.speak(utter);
 }
 
-// NAV
+// iPhone fix
+speechSynthesis.onvoiceschanged = () => {};
+
 function goHome(){
     window.location.href = "index.html";
 }
@@ -147,7 +191,7 @@ function save(){
     localStorage.setItem(getKey("wrongWords"), JSON.stringify(wrongWords));
 }
 
-// FILE
+// FILE LOAD
 fileInput.addEventListener("change", e=>{
     const file = e.target.files[0];
     if(!file) return;
@@ -223,7 +267,7 @@ function getRandomWord(){
     return pool[Math.floor(Math.random()*pool.length)];
 }
 
-// 🔥 SORU
+// 🔥 QUESTION
 function newQuestion(nextWord = null){
 
     const w = nextWord || getRandomWord();
@@ -234,7 +278,7 @@ function newQuestion(nextWord = null){
     let options = [correctAnswer];
     const pool = [...new Set(words.map(x=>x.meaning))];
 
-    while(options.length < 6){
+    while(options.length < 8){
         let r = pool[Math.floor(Math.random()*pool.length)];
         if(r !== correctAnswer && !options.includes(r)){
             options.push(r);
@@ -251,6 +295,7 @@ function newQuestion(nextWord = null){
 
     const speakBtn = document.createElement("button");
     speakBtn.innerText = "🔊";
+    speakBtn.style.marginLeft = "10px";
     speakBtn.onclick = ()=> speak(w.word);
 
     q.appendChild(speakBtn);
@@ -274,7 +319,6 @@ function newQuestion(nextWord = null){
                 btn.style.backgroundColor = "lightgreen";
                 res.innerText = "✅ Korrekt";
 
-                // 🔊 DOĞRU → tekrar
                 speak(w.word);
 
                 if(!usedWords.includes(w.word)){
@@ -300,13 +344,10 @@ function newQuestion(nextWord = null){
                 save();
                 updateProgress();
 
-                // 🔥 YENİ KELİMEYİ ÖNCEDEN AL
                 const next = getRandomWord();
 
                 if(next){
-                    // 🔊 DANCA OKU (click içinde!)
                     speak(next.word);
-
                     setTimeout(()=> newQuestion(next), 800);
                 } else {
                     setTimeout(newQuestion, 800);
