@@ -1,0 +1,230 @@
+<!DOCTYPE html>
+<html lang="da">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Danskindlæring</title>
+
+<style>
+body {
+    margin: 0;
+    font-family: Arial, sans-serif;
+    background: linear-gradient(135deg, #f0f2f5, #dfe6e9);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    min-height: 100vh;
+}
+
+/* 🔥 ANA KART */
+.container {
+    text-align: center;
+    width: 90%;
+    max-width: 400px;
+    background: white;
+    padding: 25px;
+    border-radius: 16px;
+
+    border: 1px solid rgba(0,0,0,0.08);
+    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+}
+
+/* 🔝 HEADER */
+.header {
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    margin-bottom: 25px;
+}
+
+.header img {
+    width: 40px;
+    height: 28px;
+    border-radius: 4px;
+}
+
+h1 {
+    font-size: 20px;
+    margin: 0;
+}
+
+/* 🔘 BUTONLAR */
+button {
+    width: 100%;
+    padding: 15px;
+    margin: 10px 0;
+    font-size: 18px;
+    border: none;
+    border-radius: 12px;
+    cursor: pointer;
+    transition: 0.2s;
+}
+
+.btn-word {
+    background: #007bff;
+    color: white;
+}
+
+.btn-sentence {
+    background: #28a745;
+    color: white;
+}
+
+button:active {
+    transform: scale(0.97);
+}
+
+/* 🔒 OVERLAY */
+#overlay {
+    position: fixed;
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+
+    background: rgba(0,0,0,0.65);
+
+    display: flex;
+    justify-content: center;
+    align-items: center;
+
+    z-index: 999;
+}
+
+.overlay-box {
+    background: white;
+    padding: 25px;
+    border-radius: 14px;
+    text-align: center;
+    max-width: 320px;
+
+    border: 1px solid rgba(0,0,0,0.1);
+    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
+}
+
+.overlay-box h3 {
+    margin-top: 0;
+}
+
+.overlay-box p {
+    font-size: 14px;
+    margin-bottom: 15px;
+}
+
+.checkbox {
+    display: flex;
+    align-items: center;
+    gap: 8px;
+    justify-content: center;
+    margin-bottom: 15px;
+    font-size: 14px;
+}
+
+.overlay-box button {
+    width: 100%;
+    padding: 12px;
+    font-size: 16px;
+    border-radius: 8px;
+    border: none;
+    background: #28a745;
+    color: white;
+    opacity: 0.5;
+}
+
+.overlay-box button.active {
+    opacity: 1;
+    cursor: pointer;
+}
+</style>
+</head>
+
+<body>
+
+<div class="container">
+
+    <!-- HEADER -->
+    <div class="header">
+        <img src="https://flagcdn.com/w80/dk.png" alt="DK">
+        <h1>Danskindlæring</h1>
+        <img src="https://flagcdn.com/w80/tr.png" alt="TR">
+    </div>
+
+    <!-- BUTONLAR -->
+    <button class="btn-word" onclick="goWord()">
+        📚 Ordøvelse
+    </button>
+
+    <button class="btn-sentence" onclick="goSentence()">
+        🧩 Sætningsøvelse
+    </button>
+
+</div>
+
+<!-- 🔒 OVERLAY -->
+<div id="overlay">
+    <div class="overlay-box">
+
+        <h3>Vilkår for brug</h3>
+
+        <p>
+            Dette program er udviklet af <strong>Gökan Sisman</strong>.<br>
+            Enhver uautoriseret brug, kopiering eller distribution er strengt forbudt.
+        </p>
+
+        <label class="checkbox">
+            <input type="checkbox" id="acceptCheck">
+            Jeg accepterer vilkårene
+        </label>
+
+        <button id="acceptBtn" disabled onclick="acceptApp()">
+            ✔ Fortsæt
+        </button>
+
+    </div>
+</div>
+
+<script>
+
+// SAYFA GEÇİŞ
+function goWord(){
+    window.location.href = "word.html";
+}
+
+function goSentence(){
+    window.location.href = "sentence.html";
+}
+
+// CHECKBOX
+const check = document.getElementById("acceptCheck");
+const btn = document.getElementById("acceptBtn");
+
+check.addEventListener("change", function(){
+    if(this.checked){
+        btn.disabled = false;
+        btn.classList.add("active");
+    } else {
+        btn.disabled = true;
+        btn.classList.remove("active");
+    }
+});
+
+// KABUL
+function acceptApp(){
+    localStorage.setItem("accepted", "yes");
+    document.getElementById("overlay").style.display = "none";
+}
+
+// SAYFA AÇILIŞ
+window.onload = function(){
+    if(localStorage.getItem("accepted") === "yes"){
+        document.getElementById("overlay").style.display = "none";
+    }
+};
+
+</script>
+
+</body>
+</html>
