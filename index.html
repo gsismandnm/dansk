@@ -3,242 +3,300 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Danskindlæring</title>
+<title>Læseøvelse</title>
 
 <style>
 body {
     margin: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #f0f2f5, #dfe6e9);
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    min-height: 100vh;
+    font-family: Arial;
+    background: #f5f6fa;
 }
 
-/* 🔥 ANA KART */
-.container {
-    text-align: center;
-    width: 90%;
-    max-width: 400px;
+/* TOP BAR */
+.top-bar {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    padding: 8px;
     background: white;
-    padding: 25px;
-    border-radius: 16px;
-
-    border: 1px solid rgba(0,0,0,0.08);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
+    flex-wrap: wrap;
 }
 
-/* 🔝 HEADER */
-.header {
-    display: flex;
-    align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 25px;
+.top-bar button {
+    padding: 6px;
+    font-size: 13px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
 }
 
-.header img {
-    width: 40px;
-    height: 28px;
-    border-radius: 4px;
+/* SLIDER */
+.slider {
+    width: 90px;
 }
 
-h1 {
-    font-size: 20px;
-    margin: 0;
-}
-
-/* 🔘 BUTONLAR */
-button {
-    width: 100%;
+/* READER */
+.reader {
+    height: 30vh;
+    overflow-y: auto;
+    background: white;
+    margin: 10px;
     padding: 15px;
-    margin: 10px 0;
-    font-size: 18px;
-    border: none;
     border-radius: 12px;
-    cursor: pointer;
-    transition: 0.2s;
+    line-height: 1.8;
 }
 
-.btn-word {
-    background: #007bff;
-    color: white;
+/* SENTENCE */
+.sentence {
+    padding: 6px;
+    margin-bottom: 8px;
+    border-radius: 6px;
 }
 
-.btn-sentence {
-    background: #28a745;
-    color: white;
+/* 🇩🇰 */
+.active {
+    background: #fff59d;
 }
 
-/* 🆕 OKUMA BUTONU */
-.btn-reading {
-    background: #ff9800;
-    color: white;
-}
-
-button:active {
-    transform: scale(0.97);
-}
-
-/* 🔒 OVERLAY */
-#overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-
-    background: rgba(0,0,0,0.65);
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    z-index: 999;
-}
-
-.overlay-box {
-    background: white;
-    padding: 25px;
-    border-radius: 14px;
-    text-align: center;
-    max-width: 320px;
-
-    border: 1px solid rgba(0,0,0,0.1);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-}
-
-.overlay-box h3 {
-    margin-top: 0;
-}
-
-.overlay-box p {
-    font-size: 14px;
-    margin-bottom: 15px;
-}
-
-.checkbox {
-    display: flex;
-    align-items: center;
-    gap: 8px;
-    justify-content: center;
-    margin-bottom: 15px;
-    font-size: 14px;
-}
-
-.overlay-box button {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: none;
-    background: #28a745;
-    color: white;
-    opacity: 0.5;
-}
-
-.overlay-box button.active {
-    opacity: 1;
-    cursor: pointer;
+/* 🇹🇷 */
+.active-tr {
+    background: #eaf4ff;
 }
 </style>
 </head>
 
 <body>
 
-<div class="container">
+<div class="top-bar">
 
-    <!-- HEADER -->
-    <div class="header">
-        <img src="https://flagcdn.com/w80/dk.png" alt="DK">
-        <h1>Danskindlæring</h1>
-        <img src="https://flagcdn.com/w80/tr.png" alt="TR">
-    </div>
+    <button onclick="goBack()">⬅ Tilbage</button>
 
-    <!-- BUTONLAR -->
-    <button class="btn-word" onclick="goWord()">
-        📚 Ordøvelse
-    </button>
+    <input type="file" id="fileInput" accept=".js" style="display:none">
+    <button onclick="document.getElementById('fileInput').click()">📂 Vælg fil</button>
 
-    <button class="btn-sentence" onclick="goSentence()">
-        🧩 Sætningsøvelse
-    </button>
+    <select id="textSelect"></select>
 
-    <!-- 🆕 OKUMA -->
-    <button class="btn-reading" onclick="goReading()">
-        📖 Læseøvelse
-    </button>
+    <button onclick="startReading()">▶</button>
+    <button onclick="pause()">⏸</button>
+    <button onclick="resume()">▶️</button>
+    <button onclick="rewind()">⏪</button>
+    <button onclick="forward()">⏩</button>
+
+    <input type="range" min="0.5" max="1.5" step="0.1" value="1" id="speedSlider" class="slider">
+
+    <!-- FONT -->
+    <button onclick="decreaseFont()">A-</button>
+    <button onclick="increaseFont()">A+</button>
+
+    <button onclick="toggleTranslation()">🇹🇷</button>
 
 </div>
 
-<!-- 🔒 OVERLAY -->
-<div id="overlay">
-    <div class="overlay-box">
-
-        <h3>Vilkår for brug</h3>
-
-        <p>
-            Dette program er udviklet af <strong>Gökan Sisman</strong>.<br>
-            Enhver uautoriseret brug, kopiering eller distribution er strengt forbudt.
-        </p>
-
-        <label class="checkbox">
-            <input type="checkbox" id="acceptCheck">
-            Jeg accepterer vilkårene
-        </label>
-
-        <button id="acceptBtn" disabled onclick="acceptApp()">
-            ✔ Fortsæt
-        </button>
-
-    </div>
-</div>
+<div class="reader" id="readerDA"></div>
+<div class="reader" id="readerTR" style="display:none;"></div>
 
 <script>
 
-// SAYFA GEÇİŞ
-function goWord(){
-    window.location.href = "word.html";
+let texts = [];
+let sentencesDA = [];
+let sentencesTR = [];
+let currentIndex = 0;
+let interval;
+let rate = 1;
+let utterance;
+let showTranslation = false;
+
+/* 🔥 FONT STORAGE */
+let fontSize = localStorage.getItem("fontSize") 
+    ? parseInt(localStorage.getItem("fontSize")) 
+    : 18;
+
+// GERİ
+function goBack(){
+    stopAll();
+    window.location.href = "index.html";
 }
 
-function goSentence(){
-    window.location.href = "sentence.html";
-}
+// DOSYA
+document.getElementById("fileInput").addEventListener("change", function(e){
+    const reader = new FileReader();
 
-/* 🆕 OKUMA SAYFASI */
-function goReading(){
-    window.location.href = "reading.html";
-}
+    reader.onload = function(){
+        try {
+            eval(reader.result);
+            texts = window.texts || [];
+            loadTexts();
+        } catch(err){
+            alert("Fil fejl!");
+        }
+    };
 
-// CHECKBOX
-const check = document.getElementById("acceptCheck");
-const btn = document.getElementById("acceptBtn");
-
-check.addEventListener("change", function(){
-    if(this.checked){
-        btn.disabled = false;
-        btn.classList.add("active");
-    } else {
-        btn.disabled = true;
-        btn.classList.remove("active");
-    }
+    reader.readAsText(e.target.files[0]);
 });
 
-// KABUL
-function acceptApp(){
-    localStorage.setItem("accepted", "yes");
-    document.getElementById("overlay").style.display = "none";
+// DROPDOWN
+function loadTexts(){
+    const select = document.getElementById("textSelect");
+    select.innerHTML = "";
+
+    texts.forEach((t,i)=>{
+        const opt = document.createElement("option");
+        opt.value = i;
+        opt.textContent = t.title;
+        select.appendChild(opt);
+    });
+
+    select.onchange = loadSelectedText;
+
+    if(texts.length){
+        select.selectedIndex = 0;
+        loadSelectedText();
+    }
 }
 
-// SAYFA AÇILIŞ
-window.onload = function(){
-    if(localStorage.getItem("accepted") === "yes"){
-        document.getElementById("overlay").style.display = "none";
-    }
-};
+// METİN
+function loadSelectedText(){
+    stopAll();
+
+    const text = texts[textSelect.value];
+
+    sentencesDA = text.da.match(/[^.!?]+[.!?]+/g) || [text.da];
+    sentencesTR = text.tr.match(/[^.!?]+[.!?]+/g) || [text.tr];
+
+    const daDiv = document.getElementById("readerDA");
+    const trDiv = document.getElementById("readerTR");
+
+    daDiv.innerHTML = "";
+    trDiv.innerHTML = "";
+
+    sentencesDA.forEach((s,i)=>{
+        const div = document.createElement("div");
+        div.textContent = s;
+        div.className = "sentence";
+        div.id = "da"+i;
+        daDiv.appendChild(div);
+    });
+
+    sentencesTR.forEach((s,i)=>{
+        const div = document.createElement("div");
+        div.textContent = s;
+        div.className = "sentence";
+        div.id = "tr"+i;
+        trDiv.appendChild(div);
+    });
+
+    updateFont();
+    currentIndex = 0;
+}
+
+// OKUMA
+function startReading(){
+    if(!sentencesDA.length) return;
+
+    speechSynthesis.cancel();
+
+    utterance = new SpeechSynthesisUtterance(sentencesDA.join(" "));
+    utterance.lang = "da-DK";
+    utterance.rate = rate;
+
+    speechSynthesis.speak(utterance);
+
+    startHighlight();
+}
+
+// HIGHLIGHT
+function startHighlight(){
+    clearInterval(interval);
+
+    interval = setInterval(()=>{
+        if(currentIndex >= sentencesDA.length){
+            clearInterval(interval);
+            return;
+        }
+
+        document.querySelectorAll(".sentence").forEach(s=>{
+            s.classList.remove("active");
+            s.classList.remove("active-tr");
+        });
+
+        const daEl = document.getElementById("da"+currentIndex);
+        const trEl = document.getElementById("tr"+currentIndex);
+
+        if(daEl){
+            daEl.classList.add("active");
+            daEl.scrollIntoView({behavior:"smooth", block:"center"});
+        }
+
+        if(showTranslation && trEl){
+            trEl.classList.add("active-tr");
+            trEl.scrollIntoView({behavior:"smooth", block:"center"});
+        }
+
+        currentIndex++;
+
+    }, 2000 / rate);
+}
+
+// KONTROLLER
+function pause(){
+    speechSynthesis.pause();
+    clearInterval(interval);
+}
+
+function resume(){
+    speechSynthesis.resume();
+    startHighlight();
+}
+
+function rewind(){
+    currentIndex = Math.max(0, currentIndex - 1);
+}
+
+function forward(){
+    currentIndex = Math.min(sentencesDA.length, currentIndex + 1);
+}
+
+// HIZ
+speedSlider.addEventListener("input", function(){
+    rate = parseFloat(this.value);
+});
+
+// ÇEVİRİ
+function toggleTranslation(){
+    showTranslation = !showTranslation;
+    readerTR.style.display = showTranslation ? "block" : "none";
+}
+
+// FONT
+function updateFont(){
+    document.querySelectorAll(".sentence").forEach(el=>{
+        el.style.fontSize = fontSize + "px";
+    });
+}
+
+function increaseFont(){
+    fontSize += 2;
+    localStorage.setItem("fontSize", fontSize);
+    updateFont();
+}
+
+function decreaseFont(){
+    fontSize = Math.max(12, fontSize - 2);
+    localStorage.setItem("fontSize", fontSize);
+    updateFont();
+}
+
+// STOP
+function stopAll(){
+    try{
+        speechSynthesis.cancel();
+    }catch(e){}
+    clearInterval(interval);
+    currentIndex = 0;
+}
+
+// SAYFA ÇIKIŞ
+window.addEventListener("beforeunload", stopAll);
+window.addEventListener("pagehide", stopAll);
 
 </script>
 
