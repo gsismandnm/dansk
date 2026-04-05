@@ -144,22 +144,33 @@ button {
 
 <div id="quizContainer"></div>
 
+<!-- 🔊 AUDIO PLAYER -->
+<audio id="ttsPlayer"></audio>
+
 <script>
 
-// 🔊 SES (Google TTS + fallback)
+// 🔊 SES (iPhone FIX)
 function speak(text){
-    try {
-        const url = "https://translate.google.com/translate_tts?ie=UTF-8&q=" 
-            + encodeURIComponent(text) + "&tl=da&client=tw-ob";
 
-        const audio = new Audio(url);
-        audio.play();
-    } catch(e){
-        const utter = new SpeechSynthesisUtterance(text);
-        utter.lang = "da-DK";
-        speechSynthesis.speak(utter);
-    }
+    const player = document.getElementById("ttsPlayer");
+
+    const url = "https://translate.google.com/translate_tts?ie=UTF-8&q="
+        + encodeURIComponent(text)
+        + "&tl=da&client=tw-ob";
+
+    player.src = url;
+    player.play().catch(()=>{});
 }
+
+// 🔓 iPhone unlock
+let unlocked = false;
+document.body.addEventListener("click", () => {
+    if(!unlocked){
+        const player = document.getElementById("ttsPlayer");
+        player.play().catch(()=>{});
+        unlocked = true;
+    }
+}, { once: true });
 
 // 🔙 ANA SAYFA
 function goHome(){
@@ -275,7 +286,7 @@ function getRandomWord(){
 }
 
 // 🔥 ANA SORU
-function newQuestion(speakWord = null){
+function newQuestion(playSound = false){
 
     const w = getRandomWord();
     if(!w) return;
@@ -337,7 +348,7 @@ function newQuestion(speakWord = null){
                 save();
                 updateProgress();
 
-                setTimeout(()=> newQuestion(), 700);
+                setTimeout(()=> newQuestion(false), 700);
 
             } else {
 
@@ -352,7 +363,6 @@ function newQuestion(speakWord = null){
                 save();
                 updateProgress();
 
-                // 🔥 yeni soru + ses
                 setTimeout(()=> newQuestion(true), 700);
             }
         };
@@ -378,7 +388,7 @@ function newQuestion(speakWord = null){
     document.getElementById("quizContainer").prepend(box);
 
     // 🔊 sadece yanlış sonrası
-    if(speakWord){
+    if(playSound){
         speak(w.word);
     }
 
