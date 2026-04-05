@@ -51,16 +51,6 @@ body {
     margin-bottom: 8px;
     border-radius: 6px;
 }
-
-/* 🇩🇰 */
-.active {
-    background: #fff59d;
-}
-
-/* 🇹🇷 */
-.active-tr {
-    background: #eaf4ff;
-}
 </style>
 </head>
 
@@ -78,8 +68,6 @@ body {
     <button onclick="startReading()">▶</button>
     <button onclick="pause()">⏸</button>
     <button onclick="resume()">▶️</button>
-    <button onclick="rewind()">⏪</button>
-    <button onclick="forward()">⏩</button>
 
     <input type="range" min="0.5" max="1.5" step="0.1" value="1" id="speedSlider" class="slider">
 
@@ -99,13 +87,11 @@ body {
 let texts = [];
 let sentencesDA = [];
 let sentencesTR = [];
-let currentIndex = 0;
-let interval;
 let rate = 1;
 let utterance;
 let showTranslation = false;
 
-/* 🔥 FONT STORAGE */
+/* FONT STORAGE */
 let fontSize = localStorage.getItem("fontSize") 
     ? parseInt(localStorage.getItem("fontSize")) 
     : 18;
@@ -113,7 +99,7 @@ let fontSize = localStorage.getItem("fontSize")
 // GERİ
 function goBack(){
     stopAll();
-    window.location.href = "index.html";
+    window.location.href = "./index.html";
 }
 
 // DOSYA
@@ -168,24 +154,21 @@ function loadSelectedText(){
     daDiv.innerHTML = "";
     trDiv.innerHTML = "";
 
-    sentencesDA.forEach((s,i)=>{
+    sentencesDA.forEach((s)=>{
         const div = document.createElement("div");
         div.textContent = s;
         div.className = "sentence";
-        div.id = "da"+i;
         daDiv.appendChild(div);
     });
 
-    sentencesTR.forEach((s,i)=>{
+    sentencesTR.forEach((s)=>{
         const div = document.createElement("div");
         div.textContent = s;
         div.className = "sentence";
-        div.id = "tr"+i;
         trDiv.appendChild(div);
     });
 
     updateFont();
-    currentIndex = 0;
 }
 
 // OKUMA
@@ -199,60 +182,15 @@ function startReading(){
     utterance.rate = rate;
 
     speechSynthesis.speak(utterance);
-
-    startHighlight();
-}
-
-// HIGHLIGHT
-function startHighlight(){
-    clearInterval(interval);
-
-    interval = setInterval(()=>{
-        if(currentIndex >= sentencesDA.length){
-            clearInterval(interval);
-            return;
-        }
-
-        document.querySelectorAll(".sentence").forEach(s=>{
-            s.classList.remove("active");
-            s.classList.remove("active-tr");
-        });
-
-        const daEl = document.getElementById("da"+currentIndex);
-        const trEl = document.getElementById("tr"+currentIndex);
-
-        if(daEl){
-            daEl.classList.add("active");
-            daEl.scrollIntoView({behavior:"smooth", block:"center"});
-        }
-
-        if(showTranslation && trEl){
-            trEl.classList.add("active-tr");
-            trEl.scrollIntoView({behavior:"smooth", block:"center"});
-        }
-
-        currentIndex++;
-
-    }, 2000 / rate);
 }
 
 // KONTROLLER
 function pause(){
     speechSynthesis.pause();
-    clearInterval(interval);
 }
 
 function resume(){
     speechSynthesis.resume();
-    startHighlight();
-}
-
-function rewind(){
-    currentIndex = Math.max(0, currentIndex - 1);
-}
-
-function forward(){
-    currentIndex = Math.min(sentencesDA.length, currentIndex + 1);
 }
 
 // HIZ
@@ -290,8 +228,6 @@ function stopAll(){
     try{
         speechSynthesis.cancel();
     }catch(e){}
-    clearInterval(interval);
-    currentIndex = 0;
 }
 
 // SAYFA ÇIKIŞ
