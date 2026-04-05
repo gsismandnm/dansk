@@ -3,6 +3,7 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
+
 <title>Ordøvelse</title>
 
 <style>
@@ -13,11 +14,11 @@ body {
     margin: auto;
 }
 
-/* HEADER */
+/* 🔝 HEADER */
 .header {
     display: flex;
-    justify-content: space-between;
     align-items: center;
+    justify-content: space-between;
     border-bottom: 1px solid #ddd;
     padding-bottom: 8px;
     margin-bottom: 10px;
@@ -29,7 +30,10 @@ body {
     gap: 8px;
 }
 
-.header h2 { margin: 0; font-size: 18px; }
+.header h2 {
+    margin: 0;
+    font-size: 18px;
+}
 
 #titleInline {
     font-size: 14px;
@@ -37,77 +41,81 @@ body {
     color: #555;
 }
 
-/* BACK */
+/* 🔙 TILBAGE */
 .back-btn {
+    font-size: 14px;
     padding: 6px 10px;
-    border: 1px solid #ccc;
     border-radius: 6px;
+    border: 1px solid #ccc;
     background: white;
+    cursor: pointer;
 }
 
-/* FILE */
+/* 📂 DOSYA */
 .file-btn {
     width: 100%;
-    padding: 14px;
-    font-size: 16px;
+    padding: 12px;
+    font-size: 15px;
     border-radius: 8px;
+    border: 1px solid #ccc;
     background: #007bff;
     color: white;
     margin-bottom: 10px;
+    cursor: pointer;
 }
 
-/* TOP BUTTONS */
+/* BUTON GRUBU */
 .top-buttons {
     display: flex;
+    flex-wrap: wrap;
     gap: 6px;
     margin-bottom: 10px;
 }
 
 .top-buttons button {
     flex: 1;
-    padding: 12px;
-    font-size: 15px;
+    padding: 10px;
+    font-size: 14px;
     border-radius: 6px;
     border: 1px solid #ccc;
     background: white;
+    cursor: pointer;
 }
 
-/* QUESTION */
+/* PROGRESS */
+#progress {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+/* SORU */
 .question-box {
     border: 1px solid #ddd;
-    padding: 14px;
+    padding: 12px;
     margin-bottom: 12px;
     border-radius: 8px;
 }
 
-.question-box h3 {
-    font-size: 20px;
-}
-
-/* OPTIONS (BÜYÜTÜLDÜ) */
+/* ŞIKLAR */
 .options {
     display: grid;
     grid-template-columns: repeat(2, 1fr);
-    gap: 10px;
-    margin-top: 12px;
+    gap: 6px;
+    margin-top: 10px;
 }
 
 @media (min-width: 600px){
     .options {
-        grid-template-columns: repeat(4, 1fr);
+        grid-template-columns: repeat(5, 1fr);
     }
 }
 
-/* OPTION BUTTON */
-.options button {
-    padding: 16px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: 1px solid #ccc;
-    background: white;
+button {
+    padding: 10px;
+    font-size: 14px;
+    cursor: pointer;
 }
 
-/* RESULT */
 .correct { color: green; }
 .wrong { color: red; }
 
@@ -116,6 +124,7 @@ body {
 
 <body>
 
+<!-- 🔝 HEADER -->
 <div class="header">
     <div class="header-left">
         <h2>📚 Danskindlæring</h2>
@@ -124,11 +133,16 @@ body {
     <button class="back-btn" onclick="goHome()">⬅ Tilbage</button>
 </div>
 
+<!-- 📂 DOSYA -->
 <input type="file" id="fileInput" hidden>
-<button class="file-btn" onclick="fileInput.click()">📂 Vælg fil</button>
+
+<button class="file-btn" onclick="document.getElementById('fileInput').click()">
+📂 Vælg fil
+</button>
 
 <p id="fileName"></p>
 
+<!-- 🔘 MOD BUTONLARI -->
 <div class="top-buttons">
     <button onclick="setMode('all')">📚 Alle</button>
     <button onclick="setMode('hard')">⭐ Svære</button>
@@ -142,37 +156,40 @@ body {
 
 <script>
 
-// 🔊 EN İYİ SES (Sara zorlanır)
+// 🔊 GOOGLE TTS + FALLBACK
 function speak(text){
 
-    const utter = new SpeechSynthesisUtterance(text);
-    const voices = speechSynthesis.getVoices();
+    try {
 
-    let voice =
-        voices.find(v => v.name.includes("Sara") && v.lang === "da-DK") ||
-        voices.find(v => v.lang === "da-DK");
+        // Google TTS
+        const url = "https://translate.google.com/translate_tts?ie=UTF-8&q=" 
+            + encodeURIComponent(text) 
+            + "&tl=da&client=tw-ob";
 
-    if(voice) utter.voice = voice;
+        const audio = new Audio(url);
+        audio.play();
 
-    utter.lang = "da-DK";
-    utter.rate = 0.9;
+    } catch(e){
 
-    speechSynthesis.cancel();
-    speechSynthesis.speak(utter);
+        // fallback (browser TTS)
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = "da-DK";
+        speechSynthesis.speak(utter);
+    }
 }
 
-// iPhone fix
-speechSynthesis.onvoiceschanged = () => {};
-
+// 🔙 ANA SAYFA
 function goHome(){
     window.location.href = "index.html";
 }
 
 let words = [];
 let currentFile = "";
+
 let usedWords = [];
 let hardWords = [];
 let wrongWords = [];
+
 let mode = "all";
 
 function getKey(name){
@@ -191,20 +208,24 @@ function save(){
     localStorage.setItem(getKey("wrongWords"), JSON.stringify(wrongWords));
 }
 
-// FILE LOAD
-fileInput.addEventListener("change", e=>{
+// DOSYA
+document.getElementById("fileInput").addEventListener("change", function(e){
+
     const file = e.target.files[0];
     if(!file) return;
 
-    fileName.innerText = "Valgt: " + file.name;
+    document.getElementById("fileName").innerText = "Valgt: " + file.name;
 
     const reader = new FileReader();
 
-    reader.onload = e=>{
+    reader.onload = function(event){
+
         try {
+            const text = event.target.result;
+
             const sandbox = {};
             const func = new Function("sandbox", `
-                ${e.target.result}
+                ${text}
                 sandbox.data = defaultWords;
                 sandbox.title = typeof title !== 'undefined' ? title : "";
             `);
@@ -214,85 +235,107 @@ fileInput.addEventListener("change", e=>{
             words = sandbox.data;
             currentFile = file.name;
 
-            titleInline.innerText = sandbox.title || "";
+            document.getElementById("titleInline").innerText = sandbox.title || "";
 
             loadStorage();
             updateProgress();
 
-            quizContainer.innerHTML = "";
+            document.getElementById("quizContainer").innerHTML = "";
+
             newQuestion();
 
-        } catch {
+        } catch(e){
             alert("Dosya okunamadı!");
         }
+
     };
 
     reader.readAsText(file);
 });
 
+// MODE
 function setMode(m){
     mode = m;
-    quizContainer.innerHTML = "";
+    document.getElementById("quizContainer").innerHTML = "";
     newQuestion();
 }
 
+// RESET
 function resetProgress(){
+
     if(!currentFile) return;
 
-    localStorage.clear();
+    localStorage.removeItem(getKey("usedWords"));
+    localStorage.removeItem(getKey("hardWords"));
+    localStorage.removeItem(getKey("wrongWords"));
+
     loadStorage();
     updateProgress();
 
-    quizContainer.innerHTML = "";
+    document.getElementById("quizContainer").innerHTML = "";
     newQuestion();
 }
 
+// PROGRESS
 function updateProgress(){
-    progress.innerText =
+    document.getElementById("progress").innerText =
         `✔ ${usedWords.length}/${words.length} | ⭐ ${hardWords.length} | ❌ ${wrongWords.length}`;
 }
 
+// POOL
 function getPool(){
-    if(mode === "hard") return words.filter(w => hardWords.includes(w.word));
-    if(mode === "wrong") return words.filter(w => wrongWords.includes(w.word));
+
+    if(mode === "hard"){
+        return words.filter(w => hardWords.includes(w.word));
+    }
+
+    if(mode === "wrong"){
+        return words.filter(w => wrongWords.includes(w.word));
+    }
+
     return words.filter(w => !usedWords.includes(w.word));
 }
 
 function getRandomWord(){
-    const pool = getPool();
+
+    let pool = getPool();
+
     if(pool.length === 0){
-        alert("Alle ordene er færdige!");
+        alert("Alle ordene er gennemført!");
         return null;
     }
+
     return pool[Math.floor(Math.random()*pool.length)];
 }
 
-// 🔥 QUESTION
-function newQuestion(nextWord = null){
+// SORU
+function newQuestion(){
 
-    const w = nextWord || getRandomWord();
+    const w = getRandomWord();
     if(!w) return;
 
-    const correctAnswer = w.meaning;
+    let correctAnswer = w.meaning;
+
+    let optionsPool = [...new Set(words.map(x=>x.meaning))];
 
     let options = [correctAnswer];
-    const pool = [...new Set(words.map(x=>x.meaning))];
 
     while(options.length < 8){
-        let r = pool[Math.floor(Math.random()*pool.length)];
-        if(r !== correctAnswer && !options.includes(r)){
-            options.push(r);
+        let rand = optionsPool[Math.floor(Math.random()*optionsPool.length)];
+        if(rand !== correctAnswer && !options.includes(rand)){
+            options.push(rand);
         }
     }
 
     options.sort(()=>Math.random()-0.5);
 
     const box = document.createElement("div");
-    box.className = "question-box";
+    box.className="question-box";
 
     const q = document.createElement("h3");
     q.innerText = w.word;
 
+    // 🔊 BUTON
     const speakBtn = document.createElement("button");
     speakBtn.innerText = "🔊";
     speakBtn.style.marginLeft = "10px";
@@ -300,6 +343,9 @@ function newQuestion(nextWord = null){
 
     q.appendChild(speakBtn);
     box.appendChild(q);
+
+    // 🔊 OTOMATİK OKU
+    speak(w.word);
 
     const optionsDiv = document.createElement("div");
     optionsDiv.className = "options";
@@ -312,56 +358,63 @@ function newQuestion(nextWord = null){
 
         btn.onclick = ()=>{
 
-            optionsDiv.querySelectorAll("button").forEach(b=>b.disabled=true);
+            const all = optionsDiv.querySelectorAll("button");
+            all.forEach(b => b.disabled = true);
 
             if(opt === correctAnswer){
-
                 btn.style.backgroundColor = "lightgreen";
                 res.innerText = "✅ Korrekt";
+                res.className = "correct";
 
-                speak(w.word);
-
-                if(!usedWords.includes(w.word)){
-                    usedWords.push(w.word);
-                }
-
-                wrongWords = wrongWords.filter(x=>x!==w.word);
-
-                save();
-                updateProgress();
-
-                setTimeout(newQuestion, 800);
+                wrongWords = wrongWords.filter(x => x !== w.word);
 
             } else {
-
                 btn.style.backgroundColor = "#f8d7da";
                 res.innerText = "❌ " + correctAnswer;
+                res.className = "wrong";
 
                 if(!wrongWords.includes(w.word)){
                     wrongWords.push(w.word);
                 }
 
-                save();
-                updateProgress();
-
-                const next = getRandomWord();
-
-                if(next){
-                    speak(next.word);
-                    setTimeout(()=> newQuestion(next), 800);
-                } else {
-                    setTimeout(newQuestion, 800);
-                }
+                all.forEach(b=>{
+                    if(b.innerText === correctAnswer){
+                        b.style.backgroundColor = "lightgreen";
+                    }
+                });
             }
+
+            if(!usedWords.includes(w.word)){
+                usedWords.push(w.word);
+            }
+
+            save();
+            updateProgress();
+
+            setTimeout(newQuestion, 700);
         };
 
         optionsDiv.appendChild(btn);
     });
 
+    const hardBtn = document.createElement("button");
+    hardBtn.innerText = "⭐ Svært";
+
+    hardBtn.onclick = ()=>{
+        if(!hardWords.includes(w.word)){
+            hardWords.push(w.word);
+            save();
+            updateProgress();
+        }
+    };
+
     box.appendChild(optionsDiv);
     box.appendChild(res);
+    box.appendChild(hardBtn);
 
-    quizContainer.prepend(box);
+    document.getElementById("quizContainer").prepend(box);
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
 }
 
 </script>
