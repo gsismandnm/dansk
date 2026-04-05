@@ -111,7 +111,7 @@ button { cursor: pointer; }
 
 <script>
 
-// 🔊 %100 STABLE SPEAK
+// 🔊 SES (iPhone uyumlu)
 function speak(text){
     const utter = new SpeechSynthesisUtterance(text);
     utter.lang = "da-DK";
@@ -223,7 +223,7 @@ function getRandomWord(){
     return pool[Math.floor(Math.random()*pool.length)];
 }
 
-// 🔥 CORE
+// 🔥 SORU
 function newQuestion(){
 
     const w = getRandomWord();
@@ -274,37 +274,32 @@ function newQuestion(){
                 btn.style.backgroundColor = "lightgreen";
                 res.innerText = "✅ Korrekt";
 
+                // 🔊 DOĞRU → kelimeyi oku
+                speak(w.word);
+
                 if(!usedWords.includes(w.word)){
                     usedWords.push(w.word);
                 }
 
                 wrongWords = wrongWords.filter(x=>x!==w.word);
 
-                save();
-                updateProgress();
-
-                setTimeout(newQuestion, 700);
-
             } else {
 
                 btn.style.backgroundColor = "#f8d7da";
                 res.innerText = "❌ " + correctAnswer;
 
+                // 🔊 YANLIŞ → doğru cevabı oku
+                speak(correctAnswer);
+
                 if(!wrongWords.includes(w.word)){
                     wrongWords.push(w.word);
                 }
-
-                save();
-                updateProgress();
-
-                // 🔊 CRITICAL FIX → CLICK İÇİNDE
-                const next = getRandomWord();
-                if(next){
-                    speak(next.word);
-                }
-
-                setTimeout(newQuestion, 700);
             }
+
+            save();
+            updateProgress();
+
+            setTimeout(newQuestion, 800);
         };
 
         optionsDiv.appendChild(btn);
