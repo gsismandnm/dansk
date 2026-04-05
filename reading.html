@@ -1,4 +1,5 @@
 <!DOCTYPE html>
+
 <html lang="da">
 <head>
 <meta charset="UTF-8">
@@ -6,233 +7,252 @@
 <title>Læseøvelse</title>
 
 <style>
-body {
-    margin: 0;
-    font-family: Arial;
-    background: #f5f6fa;
-}
+body { margin:0; font-family:Arial; background:#f5f6fa; }
 
-/* TOP BAR */
 .top-bar {
-    display: flex;
-    align-items: center;
-    gap: 6px;
-    padding: 8px;
-    background: white;
-    flex-wrap: wrap;
+    display:flex;
+    flex-wrap:wrap;
+    gap:8px;
+    padding:10px;
+    background:white;
 }
 
 .top-bar button {
-    padding: 6px;
-    font-size: 13px;
-    border-radius: 6px;
-    border: 1px solid #ccc;
+    padding:10px 14px;
+    font-size:16px;
+    border-radius:10px;
+    border:none;
+    cursor:pointer;
+    color:white;
+    box-shadow:0 2px 6px rgba(0,0,0,0.15);
+    transition:0.2s;
 }
 
-/* SLIDER */
-.slider {
-    width: 90px;
+.top-bar button:hover {
+    transform:translateY(-2px);
 }
 
-/* READER */
+.btn-blue { background:linear-gradient(45deg,#3498db,#5dade2); }
+.btn-green { background:linear-gradient(45deg,#2ecc71,#58d68d); }
+.btn-orange { background:linear-gradient(45deg,#f39c12,#f7b733); }
+.btn-purple { background:linear-gradient(45deg,#8e44ad,#bb8fce); }
+.btn-dark { background:linear-gradient(45deg,#34495e,#5d6d7e); }
+
 .reader {
-    height: 30vh;
-    overflow-y: auto;
-    background: white;
-    margin: 10px;
-    padding: 15px;
-    border-radius: 12px;
-    line-height: 1.8;
+    overflow-y:auto;
+    background:white;
+    margin:10px;
+    padding:15px;
+    border-radius:12px;
+    line-height:1.8;
+    height:35vh;
 }
 
-/* SENTENCE */
 .sentence {
-    padding: 6px;
-    margin-bottom: 8px;
-    border-radius: 6px;
+    padding:6px;
+    margin-bottom:8px;
+    border-radius:6px;
 }
+
+.active { background:#d4edda; }
+.active-tr { background:#fff3cd; }
+
 </style>
+
 </head>
 
 <body>
 
 <div class="top-bar">
 
-    <button onclick="goBack()">⬅ Tilbage</button>
+<button class="btn-dark" onclick="goBack()">⬅</button>
 
-    <input type="file" id="fileInput" accept=".js" style="display:none">
-    <button onclick="document.getElementById('fileInput').click()">📂 Vælg fil</button>
+<input type="file" id="fileInput" hidden>
+<button class="btn-blue" onclick="fileInput.click()">📂</button>
 
-    <select id="textSelect"></select>
+<select id="textSelect"></select>
 
-    <button onclick="startReading()">▶</button>
-    <button onclick="pause()">⏸</button>
-    <button onclick="resume()">▶️</button>
+<button class="btn-green" onclick="togglePlay()" id="playBtn">▶</button> <button class="btn-purple" onclick="rewind()">⏪</button> <button class="btn-purple" onclick="forward()">⏩</button>
 
-    <input type="range" min="0.5" max="1.5" step="0.1" value="1" id="speedSlider" class="slider">
+<input type="range" min="0.5" max="1.5" step="0.1" id="speedSlider">
 
-    <!-- FONT -->
-    <button onclick="decreaseFont()">A-</button>
-    <button onclick="increaseFont()">A+</button>
-
-    <button onclick="toggleTranslation()">🇹🇷</button>
+<button class="btn-dark" onclick="decreaseFont()">A-</button> <button class="btn-dark" onclick="increaseFont()">A+</button>
 
 </div>
 
-<div class="reader" id="readerDA"></div>
-<div class="reader" id="readerTR" style="display:none;"></div>
+<div id="readerDA" class="reader"></div>
+<div id="readerTR" class="reader"></div>
 
 <script>
 
-let texts = [];
-let sentencesDA = [];
-let sentencesTR = [];
-let rate = 1;
-let utterance;
-let showTranslation = false;
+let texts=[];
+let sentencesDA=[];
+let sentencesTR=[];
+let currentIndex=0;
+let speaking=false;
 
-/* FONT STORAGE */
-let fontSize = localStorage.getItem("fontSize") 
-    ? parseInt(localStorage.getItem("fontSize")) 
-    : 18;
+let rate = localStorage.getItem("speed") ? parseFloat(localStorage.getItem("speed")) : 1;
+let fontSize = localStorage.getItem("fontSize") ? parseInt(localStorage.getItem("fontSize")) : 18;
 
-// GERİ
+speedSlider.value = rate;
+
 function goBack(){
     stopAll();
-    window.location.href = "./index.html";
+    window.location.href="index.html";
 }
 
-// DOSYA
-document.getElementById("fileInput").addEventListener("change", function(e){
-    const reader = new FileReader();
-
-    reader.onload = function(){
-        try {
-            eval(reader.result);
-            texts = window.texts || [];
-            loadTexts();
-        } catch(err){
-            alert("Fil fejl!");
-        }
+fileInput.addEventListener("change", e=>{
+    const reader=new FileReader();
+    reader.onload=function(){
+        eval(reader.result);
+        texts=window.texts||[];
+        loadTexts();
     };
-
     reader.readAsText(e.target.files[0]);
 });
 
-// DROPDOWN
 function loadTexts(){
-    const select = document.getElementById("textSelect");
-    select.innerHTML = "";
-
+    textSelect.innerHTML="";
     texts.forEach((t,i)=>{
-        const opt = document.createElement("option");
-        opt.value = i;
-        opt.textContent = t.title;
-        select.appendChild(opt);
+        let o=document.createElement("option");
+        o.value=i;
+        o.textContent=t.title;
+        textSelect.appendChild(o);
     });
-
-    select.onchange = loadSelectedText;
-
-    if(texts.length){
-        select.selectedIndex = 0;
-        loadSelectedText();
-    }
+    textSelect.onchange=loadSelectedText;
+    loadSelectedText();
 }
 
-// METİN
 function loadSelectedText(){
     stopAll();
 
-    const text = texts[textSelect.value];
+    const t=texts[textSelect.value];
 
-    sentencesDA = text.da.match(/[^.!?]+[.!?]+/g) || [text.da];
-    sentencesTR = text.tr.match(/[^.!?]+[.!?]+/g) || [text.tr];
+    sentencesDA = t.da.match(/[^.!?]+[.!?]+/g)||[t.da];
+    sentencesTR = t.tr.match(/[^.!?]+[.!?]+/g)||[t.tr];
 
-    const daDiv = document.getElementById("readerDA");
-    const trDiv = document.getElementById("readerTR");
+    readerDA.innerHTML="";
+    readerTR.innerHTML="";
 
-    daDiv.innerHTML = "";
-    trDiv.innerHTML = "";
-
-    sentencesDA.forEach((s)=>{
-        const div = document.createElement("div");
-        div.textContent = s;
-        div.className = "sentence";
-        daDiv.appendChild(div);
+    sentencesDA.forEach((s,i)=>{
+        let d=document.createElement("div");
+        d.textContent=s;
+        d.className="sentence";
+        d.id="da"+i;
+        readerDA.appendChild(d);
     });
 
-    sentencesTR.forEach((s)=>{
-        const div = document.createElement("div");
-        div.textContent = s;
-        div.className = "sentence";
-        trDiv.appendChild(div);
+    sentencesTR.forEach((s,i)=>{
+        let d=document.createElement("div");
+        d.textContent=s;
+        d.className="sentence";
+        d.id="tr"+i;
+        readerTR.appendChild(d);
     });
 
     updateFont();
+    currentIndex=0;
 }
 
-// OKUMA
-function startReading(){
-    if(!sentencesDA.length) return;
+function togglePlay(){
+    const btn=document.getElementById("playBtn");
 
+    if(!speaking && currentIndex===0){
+        speaking=true;
+        btn.innerText="⏸";
+        readSentence();
+    }
+    else if(speaking){
+        speaking=false;
+        speechSynthesis.cancel();
+        btn.innerText="▶";
+    }
+    else{
+        speaking=true;
+        btn.innerText="⏸";
+        readSentence();
+    }
+}
+
+function readSentence(){
+    if(!speaking || currentIndex>=sentencesDA.length) return;
+
+    highlight();
+
+    let u=new SpeechSynthesisUtterance(sentencesDA[currentIndex]);
+    u.lang="da-DK";
+    u.rate=rate;
+
+    u.onend=()=>{
+        currentIndex++;
+        readSentence();
+    };
+
+    speechSynthesis.speak(u);
+}
+
+function highlight(){
+    document.querySelectorAll(".sentence").forEach(s=>{
+        s.classList.remove("active","active-tr");
+    });
+
+    let da=document.getElementById("da"+currentIndex);
+    let tr=document.getElementById("tr"+currentIndex);
+
+    if(da){
+        da.classList.add("active");
+        da.scrollIntoView({behavior:"smooth",block:"center"});
+    }
+
+    if(tr){
+        tr.classList.add("active-tr");
+        tr.scrollIntoView({behavior:"smooth",block:"center"});
+    }
+}
+
+function rewind(){
+    currentIndex=Math.max(0,currentIndex-1);
+    restart();
+}
+
+function forward(){
+    currentIndex=Math.min(sentencesDA.length-1,currentIndex+1);
+    restart();
+}
+
+function restart(){
     speechSynthesis.cancel();
-
-    utterance = new SpeechSynthesisUtterance(sentencesDA.join(" "));
-    utterance.lang = "da-DK";
-    utterance.rate = rate;
-
-    speechSynthesis.speak(utterance);
+    readSentence();
 }
 
-// KONTROLLER
-function pause(){
-    speechSynthesis.pause();
-}
+speedSlider.oninput=function(){
+    rate=parseFloat(this.value);
+    localStorage.setItem("speed",rate);
+};
 
-function resume(){
-    speechSynthesis.resume();
-}
-
-// HIZ
-speedSlider.addEventListener("input", function(){
-    rate = parseFloat(this.value);
-});
-
-// ÇEVİRİ
-function toggleTranslation(){
-    showTranslation = !showTranslation;
-    readerTR.style.display = showTranslation ? "block" : "none";
-}
-
-// FONT
 function updateFont(){
     document.querySelectorAll(".sentence").forEach(el=>{
-        el.style.fontSize = fontSize + "px";
+        el.style.fontSize=fontSize+"px";
     });
 }
 
 function increaseFont(){
-    fontSize += 2;
-    localStorage.setItem("fontSize", fontSize);
+    fontSize+=2;
+    localStorage.setItem("fontSize",fontSize);
     updateFont();
 }
 
 function decreaseFont(){
-    fontSize = Math.max(12, fontSize - 2);
-    localStorage.setItem("fontSize", fontSize);
+    fontSize=Math.max(12,fontSize-2);
+    localStorage.setItem("fontSize",fontSize);
     updateFont();
 }
 
-// STOP
 function stopAll(){
-    try{
-        speechSynthesis.cancel();
-    }catch(e){}
+    speaking=false;
+    speechSynthesis.cancel();
+    currentIndex=0;
 }
-
-// SAYFA ÇIKIŞ
-window.addEventListener("beforeunload", stopAll);
-window.addEventListener("pagehide", stopAll);
 
 </script>
 
