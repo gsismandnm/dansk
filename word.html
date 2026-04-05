@@ -345,7 +345,8 @@ function newQuestion(){
     box.appendChild(q);
 
     // 🔊 OTOMATİK OKU
-    speak(w.word);
+    //speak(w.word);
+    speakBtn.onclick = ()=> speak(w.word);
 
     const optionsDiv = document.createElement("div");
     optionsDiv.className = "options";
