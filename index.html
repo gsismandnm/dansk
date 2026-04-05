@@ -3,226 +3,387 @@
 <head>
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Danskindlæring</title>
+
+<title>Ordøvelse</title>
 
 <style>
 body {
-    margin: 0;
-    font-family: Arial, sans-serif;
-    background: linear-gradient(135deg, #f0f2f5, #dfe6e9);
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    min-height: 100vh;
+    font-family: Arial;
+    padding: 10px;
+    max-width: 900px;
+    margin: auto;
 }
 
-/* 🔥 ANA KART */
-.container {
-    text-align: center;
-    width: 90%;
-    max-width: 400px;
-    background: white;
-    padding: 25px;
-    border-radius: 16px;
-
-    border: 1px solid rgba(0,0,0,0.08);
-    box-shadow: 0 8px 25px rgba(0,0,0,0.1);
-}
-
-/* 🔝 HEADER */
 .header {
     display: flex;
     align-items: center;
-    justify-content: center;
-    gap: 10px;
-    margin-bottom: 25px;
+    justify-content: space-between;
+    border-bottom: 1px solid #ddd;
+    padding-bottom: 8px;
+    margin-bottom: 10px;
 }
 
-.header img {
-    width: 40px;
-    height: 28px;
-    border-radius: 4px;
-}
-
-h1 {
-    font-size: 20px;
-    margin: 0;
-}
-
-/* 🔘 BUTONLAR */
-button {
-    width: 100%;
-    padding: 15px;
-    margin: 10px 0;
-    font-size: 18px;
-    border: none;
-    border-radius: 12px;
-    cursor: pointer;
-    transition: 0.2s;
-}
-
-.btn-word {
-    background: #007bff;
-    color: white;
-}
-
-.btn-sentence {
-    background: #28a745;
-    color: white;
-}
-
-button:active {
-    transform: scale(0.97);
-}
-
-/* 🔒 OVERLAY */
-#overlay {
-    position: fixed;
-    top: 0;
-    left: 0;
-    width: 100%;
-    height: 100%;
-
-    background: rgba(0,0,0,0.65);
-
-    display: flex;
-    justify-content: center;
-    align-items: center;
-
-    z-index: 999;
-}
-
-.overlay-box {
-    background: white;
-    padding: 25px;
-    border-radius: 14px;
-    text-align: center;
-    max-width: 320px;
-
-    border: 1px solid rgba(0,0,0,0.1);
-    box-shadow: 0 10px 30px rgba(0,0,0,0.25);
-}
-
-.overlay-box h3 {
-    margin-top: 0;
-}
-
-.overlay-box p {
-    font-size: 14px;
-    margin-bottom: 15px;
-}
-
-.checkbox {
+.header-left {
     display: flex;
     align-items: center;
     gap: 8px;
-    justify-content: center;
-    margin-bottom: 15px;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+#titleInline {
     font-size: 14px;
+    font-weight: bold;
+    color: #555;
 }
 
-.overlay-box button {
-    width: 100%;
-    padding: 12px;
-    font-size: 16px;
-    border-radius: 8px;
-    border: none;
-    background: #28a745;
-    color: white;
-    opacity: 0.5;
-}
-
-.overlay-box button.active {
-    opacity: 1;
+.back-btn {
+    font-size: 14px;
+    padding: 6px 10px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: white;
     cursor: pointer;
 }
+
+.file-btn {
+    width: 100%;
+    padding: 12px;
+    font-size: 15px;
+    border-radius: 8px;
+    border: 1px solid #ccc;
+    background: #007bff;
+    color: white;
+    margin-bottom: 10px;
+    cursor: pointer;
+}
+
+.top-buttons {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 6px;
+    margin-bottom: 10px;
+}
+
+.top-buttons button {
+    flex: 1;
+    padding: 10px;
+    font-size: 14px;
+    border-radius: 6px;
+    border: 1px solid #ccc;
+    background: white;
+    cursor: pointer;
+}
+
+#progress {
+    font-size: 14px;
+    margin-bottom: 10px;
+}
+
+.question-box {
+    border: 1px solid #ddd;
+    padding: 12px;
+    margin-bottom: 12px;
+    border-radius: 8px;
+}
+
+.options {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 6px;
+    margin-top: 10px;
+}
+
+@media (min-width: 600px){
+    .options {
+        grid-template-columns: repeat(5, 1fr);
+    }
+}
+
+button {
+    padding: 10px;
+    font-size: 14px;
+    cursor: pointer;
+}
+
+.correct { color: green; }
+.wrong { color: red; }
+
 </style>
 </head>
 
 <body>
 
-<div class="container">
-
-    <!-- HEADER -->
-    <div class="header">
-        <img src="https://flagcdn.com/w80/dk.png" alt="DK">
-        <h1>Danskindlæring</h1>
-        <img src="https://flagcdn.com/w80/tr.png" alt="TR">
+<div class="header">
+    <div class="header-left">
+        <h2>📚 Danskindlæring</h2>
+        <span id="titleInline"></span>
     </div>
-
-    <!-- BUTONLAR -->
-    <button class="btn-word" onclick="goWord()">
-        📚 Ordøvelse
-    </button>
-
-    <button class="btn-sentence" onclick="goSentence()">
-        🧩 Sætningsøvelse
-    </button>
-
+    <button class="back-btn" onclick="goHome()">⬅ Tilbage</button>
 </div>
 
-<!-- 🔒 OVERLAY -->
-<div id="overlay">
-    <div class="overlay-box">
+<input type="file" id="fileInput" hidden>
 
-        <h3>Vilkår for brug</h3>
+<button class="file-btn" onclick="document.getElementById('fileInput').click()">
+📂 Vælg fil
+</button>
 
-        <p>
-            Dette program er udviklet af <strong>Gökan Sisman</strong>.<br>
-            Enhver uautoriseret brug, kopiering eller distribution er strengt forbudt.
-        </p>
+<p id="fileName"></p>
 
-        <label class="checkbox">
-            <input type="checkbox" id="acceptCheck">
-            Jeg accepterer vilkårene
-        </label>
-
-        <button id="acceptBtn" disabled onclick="acceptApp()">
-            ✔ Fortsæt
-        </button>
-
-    </div>
+<div class="top-buttons">
+    <button onclick="setMode('all')">📚 Alle</button>
+    <button onclick="setMode('hard')">⭐ Svære</button>
+    <button onclick="setMode('wrong')">❌ Fejl</button>
+    <button onclick="resetProgress()">🔄 Nulstil</button>
 </div>
+
+<p id="progress"></p>
+
+<div id="quizContainer"></div>
 
 <script>
 
-// SAYFA GEÇİŞ
-function goWord(){
-    window.location.href = "word.html";
-}
+// 🔊 SES (Google TTS + fallback)
+function speak(text){
+    try {
+        const url = "https://translate.google.com/translate_tts?ie=UTF-8&q=" 
+            + encodeURIComponent(text) + "&tl=da&client=tw-ob";
 
-function goSentence(){
-    window.location.href = "sentence.html";
-}
-
-// CHECKBOX
-const check = document.getElementById("acceptCheck");
-const btn = document.getElementById("acceptBtn");
-
-check.addEventListener("change", function(){
-    if(this.checked){
-        btn.disabled = false;
-        btn.classList.add("active");
-    } else {
-        btn.disabled = true;
-        btn.classList.remove("active");
+        const audio = new Audio(url);
+        audio.play();
+    } catch(e){
+        const utter = new SpeechSynthesisUtterance(text);
+        utter.lang = "da-DK";
+        speechSynthesis.speak(utter);
     }
+}
+
+// 🔙 ANA SAYFA
+function goHome(){
+    window.location.href = "index.html";
+}
+
+let words = [];
+let currentFile = "";
+let usedWords = [];
+let hardWords = [];
+let wrongWords = [];
+let mode = "all";
+
+function getKey(name){
+    return name + "_" + currentFile;
+}
+
+function loadStorage(){
+    usedWords = JSON.parse(localStorage.getItem(getKey("usedWords"))) || [];
+    hardWords = JSON.parse(localStorage.getItem(getKey("hardWords"))) || [];
+    wrongWords = JSON.parse(localStorage.getItem(getKey("wrongWords"))) || [];
+}
+
+function save(){
+    localStorage.setItem(getKey("usedWords"), JSON.stringify(usedWords));
+    localStorage.setItem(getKey("hardWords"), JSON.stringify(hardWords));
+    localStorage.setItem(getKey("wrongWords"), JSON.stringify(wrongWords));
+}
+
+document.getElementById("fileInput").addEventListener("change", function(e){
+
+    const file = e.target.files[0];
+    if(!file) return;
+
+    document.getElementById("fileName").innerText = "Valgt: " + file.name;
+
+    const reader = new FileReader();
+
+    reader.onload = function(event){
+
+        try {
+            const text = event.target.result;
+
+            const sandbox = {};
+            const func = new Function("sandbox", `
+                ${text}
+                sandbox.data = defaultWords;
+                sandbox.title = typeof title !== 'undefined' ? title : "";
+            `);
+
+            func(sandbox);
+
+            words = sandbox.data;
+            currentFile = file.name;
+
+            document.getElementById("titleInline").innerText = sandbox.title || "";
+
+            loadStorage();
+            updateProgress();
+
+            document.getElementById("quizContainer").innerHTML = "";
+
+            newQuestion();
+
+        } catch(e){
+            alert("Dosya okunamadı!");
+        }
+
+    };
+
+    reader.readAsText(file);
 });
 
-// KABUL
-function acceptApp(){
-    localStorage.setItem("accepted", "yes");
-    document.getElementById("overlay").style.display = "none";
+function setMode(m){
+    mode = m;
+    document.getElementById("quizContainer").innerHTML = "";
+    newQuestion();
 }
 
-// SAYFA AÇILIŞ
-window.onload = function(){
-    if(localStorage.getItem("accepted") === "yes"){
-        document.getElementById("overlay").style.display = "none";
+function resetProgress(){
+
+    if(!currentFile) return;
+
+    localStorage.removeItem(getKey("usedWords"));
+    localStorage.removeItem(getKey("hardWords"));
+    localStorage.removeItem(getKey("wrongWords"));
+
+    loadStorage();
+    updateProgress();
+
+    document.getElementById("quizContainer").innerHTML = "";
+    newQuestion();
+}
+
+function updateProgress(){
+    document.getElementById("progress").innerText =
+        `✔ ${usedWords.length}/${words.length} | ⭐ ${hardWords.length} | ❌ ${wrongWords.length}`;
+}
+
+function getPool(){
+    if(mode === "hard") return words.filter(w => hardWords.includes(w.word));
+    if(mode === "wrong") return words.filter(w => wrongWords.includes(w.word));
+    return words.filter(w => !usedWords.includes(w.word));
+}
+
+function getRandomWord(){
+    let pool = getPool();
+    if(pool.length === 0){
+        alert("Alle ordene er gennemført!");
+        return null;
     }
-};
+    return pool[Math.floor(Math.random()*pool.length)];
+}
+
+// 🔥 ANA SORU
+function newQuestion(speakWord = null){
+
+    const w = getRandomWord();
+    if(!w) return;
+
+    let correctAnswer = w.meaning;
+
+    let optionsPool = [...new Set(words.map(x=>x.meaning))];
+    let options = [correctAnswer];
+
+    while(options.length < 8){
+        let rand = optionsPool[Math.floor(Math.random()*optionsPool.length)];
+        if(rand !== correctAnswer && !options.includes(rand)){
+            options.push(rand);
+        }
+    }
+
+    options.sort(()=>Math.random()-0.5);
+
+    const box = document.createElement("div");
+    box.className="question-box";
+
+    const q = document.createElement("h3");
+    q.innerText = w.word;
+
+    const speakBtn = document.createElement("button");
+    speakBtn.innerText = "🔊";
+    speakBtn.style.marginLeft = "10px";
+    speakBtn.onclick = ()=> speak(w.word);
+
+    q.appendChild(speakBtn);
+    box.appendChild(q);
+
+    const optionsDiv = document.createElement("div");
+    optionsDiv.className = "options";
+
+    const res = document.createElement("p");
+
+    options.forEach(opt=>{
+        const btn = document.createElement("button");
+        btn.innerText = opt;
+
+        btn.onclick = ()=>{
+
+            const all = optionsDiv.querySelectorAll("button");
+            all.forEach(b => b.disabled = true);
+
+            if(opt === correctAnswer){
+
+                btn.style.backgroundColor = "lightgreen";
+                res.innerText = "✅ Korrekt";
+                res.className = "correct";
+
+                wrongWords = wrongWords.filter(x => x !== w.word);
+
+                if(!usedWords.includes(w.word)){
+                    usedWords.push(w.word);
+                }
+
+                save();
+                updateProgress();
+
+                setTimeout(()=> newQuestion(), 700);
+
+            } else {
+
+                btn.style.backgroundColor = "#f8d7da";
+                res.innerText = "❌ " + correctAnswer;
+                res.className = "wrong";
+
+                if(!wrongWords.includes(w.word)){
+                    wrongWords.push(w.word);
+                }
+
+                save();
+                updateProgress();
+
+                // 🔥 yeni soru + ses
+                setTimeout(()=> newQuestion(true), 700);
+            }
+        };
+
+        optionsDiv.appendChild(btn);
+    });
+
+    box.appendChild(optionsDiv);
+    box.appendChild(res);
+
+    const hardBtn = document.createElement("button");
+    hardBtn.innerText = "⭐ Svært";
+    hardBtn.onclick = ()=>{
+        if(!hardWords.includes(w.word)){
+            hardWords.push(w.word);
+            save();
+            updateProgress();
+        }
+    };
+
+    box.appendChild(hardBtn);
+
+    document.getElementById("quizContainer").prepend(box);
+
+    // 🔊 sadece yanlış sonrası
+    if(speakWord){
+        speak(w.word);
+    }
+
+    window.scrollTo({ top: 0, behavior: "smooth" });
+}
 
 </script>
 
