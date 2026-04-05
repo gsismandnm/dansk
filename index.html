@@ -4,7 +4,7 @@
 <meta charset="UTF-8">
 <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-<title>Kelime Egzersiz</title>
+<title>kelime</title>
 
 <style>
 body {
@@ -12,6 +12,24 @@ body {
     padding: 10px;
     max-width: 900px;
     margin: auto;
+}
+
+.header {
+    display: flex;
+    flex-wrap: wrap;
+    align-items: center;
+    gap: 10px;
+    margin-bottom: 10px;
+}
+
+.header h2 {
+    margin: 0;
+    font-size: 18px;
+}
+
+#titleInline {
+    font-weight: bold;
+    font-size: 16px;
 }
 
 .question-box {
@@ -40,7 +58,6 @@ button {
     cursor: pointer;
 }
 
-/* 📂 DOSYA BUTONU */
 .file-btn {
     width: 100%;
     padding: 14px;
@@ -50,20 +67,10 @@ button {
     background-color: #007bff;
     color: white;
     margin-bottom: 10px;
-    transition: 0.3s;
-}
-
-.file-btn:hover {
-    background-color: #0056b3;
 }
 
 .file-btn.selected {
     background-color: #28a745;
-}
-
-#fileName {
-    font-size: 14px;
-    margin-bottom: 10px;
 }
 
 .correct { color: green; }
@@ -77,20 +84,24 @@ button {
 
 <body>
 
-<h2>📘 Kelime Egzersiz</h2>
+<div class="header">
+    <h2> 📚 Danskindlæring </h2>
+    <span id= "titleInline"></span>
+</div>
 
 <input type="file" id="fileInput" hidden>
 
-<button id="fileButton" class="file-btn" onclick="document.getElementById('fileInput').click()">
-📂 Dosya Seç
+<button class="file-btn" onclick="document.getElementById('fileInput').click()">
+📂 Vælg fil
 </button>
 
 <p id="fileName"></p>
 
 <div class="top-buttons">
-    <button onclick="setMode('all')">📚 Tüm</button>
-    <button onclick="setMode('hard')">🔥 Zor</button>
-    <button onclick="resetProgress()">🔄 Sıfırla</button>
+    <button onclick="setMode('all')">📚 Alle</button>
+    <button onclick="setMode('hard')">⭐ Svære</button>
+    <button onclick="setMode('wrong')">❌ Fejl</button>
+    <button onclick="resetProgress()">🔄 Nulstil</button>
 </div>
 
 <p id="progress"></p>
@@ -104,6 +115,7 @@ let currentFile = "";
 
 let usedWords = [];
 let hardWords = [];
+let wrongWords = [];
 
 let mode = "all";
 
@@ -114,21 +126,23 @@ function getKey(name){
 function loadStorage(){
     usedWords = JSON.parse(localStorage.getItem(getKey("usedWords"))) || [];
     hardWords = JSON.parse(localStorage.getItem(getKey("hardWords"))) || [];
+    wrongWords = JSON.parse(localStorage.getItem(getKey("wrongWords"))) || [];
 }
 
 function save(){
     localStorage.setItem(getKey("usedWords"), JSON.stringify(usedWords));
     localStorage.setItem(getKey("hardWords"), JSON.stringify(hardWords));
+    localStorage.setItem(getKey("wrongWords"), JSON.stringify(wrongWords));
 }
 
-// 📂 DOSYA YÜKLE
+// DOSYA
 document.getElementById("fileInput").addEventListener("change", function(e){
 
     const file = e.target.files[0];
     if(!file) return;
 
-    document.getElementById("fileName").innerText = "Seçilen: " + file.name;
-    document.getElementById("fileButton").classList.add("selected");
+    // ✅ Danca yapıldı
+    document.getElementById("fileName").innerText = "Valgt: " + file.name;
 
     const reader = new FileReader();
 
@@ -141,6 +155,7 @@ document.getElementById("fileInput").addEventListener("change", function(e){
             const func = new Function("sandbox", `
                 ${text}
                 sandbox.data = defaultWords;
+                sandbox.title = typeof title !== 'undefined' ? title : "";
             `);
 
             func(sandbox);
@@ -148,14 +163,15 @@ document.getElementById("fileInput").addEventListener("change", function(e){
             words = sandbox.data;
             currentFile = file.name;
 
+            // ✅ title artık üstte inline
+            document.getElementById("titleInline").innerText = sandbox.title || "";
+
             loadStorage();
             updateProgress();
 
             document.getElementById("quizContainer").innerHTML = "";
 
-            if(words.length >= 5){
-                newQuestion();
-            }
+            newQuestion();
 
         } catch(e){
             alert("Dosya okunamadı!");
@@ -166,18 +182,21 @@ document.getElementById("fileInput").addEventListener("change", function(e){
     reader.readAsText(file);
 });
 
+// MODE
 function setMode(m){
     mode = m;
     document.getElementById("quizContainer").innerHTML = "";
     newQuestion();
 }
 
+// RESET
 function resetProgress(){
 
     if(!currentFile) return;
 
     localStorage.removeItem(getKey("usedWords"));
     localStorage.removeItem(getKey("hardWords"));
+    localStorage.removeItem(getKey("wrongWords"));
 
     loadStorage();
     updateProgress();
@@ -186,15 +205,21 @@ function resetProgress(){
     newQuestion();
 }
 
+// PROGRESS
 function updateProgress(){
     document.getElementById("progress").innerText =
-        `Tamamlanan: ${usedWords.length} / ${words.length} | Zor: ${hardWords.length}`;
+        `✔ Gennemført: ${usedWords.length}/${words.length} | ⭐ Svære: ${hardWords.length} | ❌ Fejl: ${wrongWords.length}`;
 }
 
+// POOL
 function getPool(){
 
     if(mode === "hard"){
         return words.filter(w => hardWords.includes(w.word));
+    }
+
+    if(mode === "wrong"){
+        return words.filter(w => wrongWords.includes(w.word));
     }
 
     return words.filter(w => !usedWords.includes(w.word));
@@ -205,26 +230,30 @@ function getRandomWord(){
     let pool = getPool();
 
     if(pool.length === 0){
-        alert("Tüm kelimeler bitti!");
+        alert("Alle ordene er væk!");
         return null;
     }
 
     return pool[Math.floor(Math.random()*pool.length)];
 }
 
+// SORU
 function newQuestion(){
 
     const w = getRandomWord();
     if(!w) return;
 
     let correctAnswer = w.meaning;
-    let optionsPool = words.map(x=>x.meaning);
+
+    let optionsPool = [...new Set(words.map(x=>x.meaning))];
 
     let options = [correctAnswer];
 
     while(options.length < 8){
         let rand = optionsPool[Math.floor(Math.random()*optionsPool.length)];
-        if(!options.includes(rand)) options.push(rand);
+        if(rand !== correctAnswer && !options.includes(rand)){
+            options.push(rand);
+        }
     }
 
     options.sort(()=>Math.random()-0.5);
@@ -254,10 +283,17 @@ function newQuestion(){
                 btn.style.backgroundColor = "lightgreen";
                 res.innerText = "✅ Doğru";
                 res.className = "correct";
+
+                wrongWords = wrongWords.filter(x => x !== w.word);
+
             } else {
                 btn.style.backgroundColor = "#f8d7da";
                 res.innerText = "❌ " + correctAnswer;
                 res.className = "wrong";
+
+                if(!wrongWords.includes(w.word)){
+                    wrongWords.push(w.word);
+                }
 
                 all.forEach(b=>{
                     if(b.innerText === correctAnswer){
@@ -266,7 +302,10 @@ function newQuestion(){
                 });
             }
 
-            usedWords.push(w.word);
+            if(!usedWords.includes(w.word)){
+                usedWords.push(w.word);
+            }
+
             save();
             updateProgress();
 
@@ -277,7 +316,7 @@ function newQuestion(){
     });
 
     const hardBtn = document.createElement("button");
-    hardBtn.innerText = "⭐ Bilemedim";
+    hardBtn.innerText = "⭐ Svært";
 
     hardBtn.onclick = ()=>{
         if(!hardWords.includes(w.word)){
