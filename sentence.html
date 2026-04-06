@@ -57,7 +57,6 @@ button { margin:6px; padding:10px; border-radius:8px; border:none; cursor:pointe
     }
 }
 </style>
-
 </head>
 
 <body>
@@ -103,6 +102,7 @@ function tokenize(text){
 }
 
 let words=[];
+let questionQueue=[]; // 🔥 YENİ
 let totalQuestions=0;
 let mode="order";
 
@@ -121,6 +121,11 @@ function updateStats(){
     `📊 Toplam:${totalQuestions} | ✏️ Yapılan:${answered} | 🟢 ${s.correct} | 🔴 ${s.wrong} | %${p}`;
 }
 
+// 🔥 SHUFFLE + QUEUE
+function shuffle(arr){
+    return arr.sort(()=>Math.random()-0.5);
+}
+
 fileInput.addEventListener("change", e=>{
     const reader=new FileReader();
 
@@ -133,6 +138,8 @@ fileInput.addEventListener("change", e=>{
 
         words=sandbox.data;
         totalQuestions=words.length;
+
+        questionQueue = shuffle([...words]); // 🔥 TEKRARSIZ
 
         stats={
           order:{total:0,correct:0,wrong:0},
@@ -149,32 +156,40 @@ fileInput.addEventListener("change", e=>{
 
 function setMode(m){
     mode=m;
+    questionQueue = shuffle([...words]); // 🔥 MODE değişince reset
     updateStats();
     newExercise();
 }
 
-function rand(arr){
-    return arr[Math.floor(Math.random()*arr.length)];
+// 🔥 YENİ SORU ÇEK
+function getNextQuestion(){
+    if(questionQueue.length === 0){
+        app.innerHTML = "<h2>Alle spørgsmål er færdige. Vælg en ny fil.</h2>";
+        return null;
+    }
+    return questionQueue.shift();
 }
 
 function newExercise(){
-    if(words.length<6){
+    if(words.length<1){
         app.innerText="Vælg en fil!";
         return;
     }
 
+    const s = getNextQuestion();
+    if(!s) return;
+
     let box;
-    if(mode==="order") box=order();
-    if(mode==="quiz") box=quiz();
-    if(mode==="fill") box=fill();
+    if(mode==="order") box=order(s);
+    if(mode==="quiz") box=quiz(s);
+    if(mode==="fill") box=fill(s);
 
     app.innerHTML="";
     app.appendChild(box);
 }
 
 /* ORDER */
-function order(){
-    const s=rand(words);
+function order(s){
     const tokens=tokenize(s.word);
     let shuffled=[...tokens].sort(()=>Math.random()-0.5);
 
@@ -206,7 +221,6 @@ function order(){
 
     function checkLive(){
         let userArr=Array.from(drop.children).map(x=>x.innerText);
-
         Array.from(drop.children).forEach((el,i)=>{
             el.style.background=userArr[i]===tokens[i]?"lightgreen":"#f8d7da";
         });
@@ -246,13 +260,12 @@ function order(){
 }
 
 /* QUIZ */
-function quiz(){
-    const s=rand(words);
+function quiz(s){
     let correct=s.word;
 
     let options=[correct];
     while(options.length<6){
-        let r=rand(words).word;
+        let r=words[Math.floor(Math.random()*words.length)].word;
         if(!options.includes(r)) options.push(r);
     }
 
@@ -332,8 +345,7 @@ function quiz(){
 }
 
 /* FILL */
-function fill(){
-    const s=rand(words);
+function fill(s){
     const tokens=tokenize(s.word);
 
     let idx=Math.floor(Math.random()*tokens.length);
@@ -343,7 +355,7 @@ function fill(){
     let options=[answer.toLowerCase()];
 
     while(options.length<6){
-        let r=rand(words).word.split(" ")[0].toLowerCase();
+        let r=words[Math.floor(Math.random()*words.length)].word.split(" ")[0].toLowerCase();
         if(!options.includes(r)) options.push(r);
     }
 
