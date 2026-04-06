@@ -22,7 +22,6 @@ button { margin:6px; padding:10px; border-radius:8px; border:none; cursor:pointe
     font-size:16px;
 }
 </style>
-
 </head>
 
 <body>
@@ -37,7 +36,7 @@ button { margin:6px; padding:10px; border-radius:8px; border:none; cursor:pointe
 
 <div>
 <button onclick="setMode('order')">🧩 Arrangement</button>
-<button onclick="setMode('quiz')">📝 Test</button>
+<button onclick="setMode('quiz')">📝 Eksamen</button>
 <button onclick="setMode('fill')">✏️ Udfyld</button>
 </div>
 
@@ -68,6 +67,7 @@ function tokenize(text){
 }
 
 let words=[];
+let totalQuestions = 0;
 let mode="order";
 
 let stats = {
@@ -77,9 +77,12 @@ let stats = {
 };
 
 function updateStats(){
-    let s=stats[mode];
-    let p=s.total?Math.round(s.correct/s.total*100):0;
-    statsEl.innerText=`I alt:${s.total} | 🟢 ${s.correct} | 🔴 ${s.wrong} | %${p}`;
+    let s = stats[mode];
+    let answered = s.total;
+    let p = answered ? Math.round(s.correct / answered * 100) : 0;
+
+    statsEl.innerText =
+        `📊 Toplam: ${totalQuestions} | ✏️ Yapılan: ${answered} | 🟢 ${s.correct} | 🔴 ${s.wrong} | %${p}`;
 }
 
 fileInput.addEventListener("change", e=>{
@@ -93,6 +96,7 @@ fileInput.addEventListener("change", e=>{
         `)(sandbox);
 
         words=sandbox.data;
+        totalQuestions = words.length;
 
         stats = {
           order:{total:0,correct:0,wrong:0},
@@ -158,11 +162,7 @@ function order(){
         let userArr = Array.from(drop.children).map(x=>x.innerText);
 
         Array.from(drop.children).forEach((el,i)=>{
-            if(userArr[i] === tokens[i]){
-                el.style.background = "lightgreen";
-            } else {
-                el.style.background = "#f8d7da";
-            }
+            el.style.background = userArr[i] === tokens[i] ? "lightgreen" : "#f8d7da";
         });
     }
 
@@ -172,9 +172,8 @@ function order(){
         el.innerText = w;
 
         el.onclick = ()=>{
-            if(el.parentElement === pool){
-                drop.appendChild(el);
-            } else {
+            if(el.parentElement === pool) drop.appendChild(el);
+            else {
                 pool.appendChild(el);
                 el.style.background = "#eee";
             }
@@ -195,19 +194,17 @@ function order(){
         let sStats = stats.order;
         sStats.total++;
 
-        if(user === correct) sStats.correct++;
-        else sStats.wrong++;
+        user === correct ? sStats.correct++ : sStats.wrong++;
 
         updateStats();
         newExercise();
     };
 
     box.appendChild(next);
-
     return box;
 }
 
-// QUIZ ✅ (HER TIKLAMADA OKUR)
+// QUIZ
 function quiz(){
     const s = rand(words);
     let correct = s.word;
@@ -244,10 +241,8 @@ function quiz(){
             if(answered) return;
             answered = true;
 
-            // 🔥 HER ZAMAN OKU
-            setTimeout(()=>{
-                speak(correct);
-            },200);
+            // 🔊 HER TIKLAMADA OKU
+            setTimeout(()=>{ speak(correct); }, 200);
 
             if(opt === correct){
                 btn.style.background = "lightgreen";
@@ -275,15 +270,13 @@ function quiz(){
 
         let sStats = stats.quiz;
         sStats.total++;
-        if(isCorrect) sStats.correct++;
-        else sStats.wrong++;
+        isCorrect ? sStats.correct++ : sStats.wrong++;
 
         updateStats();
         newExercise();
     };
 
     box.appendChild(next);
-
     return box;
 }
 
@@ -355,19 +348,16 @@ function fill(){
 
         let sStats = stats.fill;
         sStats.total++;
-        if(isCorrect) sStats.correct++;
-        else sStats.wrong++;
+        isCorrect ? sStats.correct++ : sStats.wrong++;
 
         updateStats();
         newExercise();
     };
 
     box.appendChild(next);
-
     return box;
 }
 
 </script>
-
 </body>
 </html>
