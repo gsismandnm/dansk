@@ -7,12 +7,19 @@
 
 <style>
 body { font-family: Arial; padding: 10px; max-width: 900px; margin:auto; }
+
 .header { display:flex; justify-content:space-between; align-items:center; margin-bottom:10px; }
+
 .box { border:1px solid #ccc; padding:12px; border-radius:10px; margin-bottom:12px; }
+
 .word { display:inline-block; padding:8px 12px; margin:6px; background:#eee; border-radius:6px; cursor:pointer; }
+
 .drop { border:2px dashed gray; min-height:60px; padding:10px; margin-top:10px; }
+
 button { margin:6px; padding:10px; border-radius:8px; border:none; cursor:pointer; }
+
 .action-btn { background:#007bff; color:white; }
+
 .answer-btn { background:#eee; }
 
 #fileBtn {
@@ -21,7 +28,36 @@ button { margin:6px; padding:10px; border-radius:8px; border:none; cursor:pointe
     color:white;
     font-size:16px;
 }
+
+/* TOP BAR */
+.top-bar {
+    display:flex;
+    justify-content:space-between;
+    align-items:center;
+    margin-bottom:10px;
+}
+
+/* QUIZ GRID */
+.answers {
+    display:grid;
+    grid-template-columns: 1fr 1fr;
+    gap:10px;
+}
+
+.answers button {
+    width:100%;
+    padding:14px;
+    font-size:16px;
+}
+
+/* MOBILE */
+@media (max-width:600px){
+    .answers{
+        grid-template-columns:1fr;
+    }
+}
 </style>
+
 </head>
 
 <body>
@@ -36,7 +72,7 @@ button { margin:6px; padding:10px; border-radius:8px; border:none; cursor:pointe
 
 <div>
 <button onclick="setMode('order')">🧩 Arrangement</button>
-<button onclick="setMode('quiz')">📝 Eksamen</button>
+<button onclick="setMode('quiz')">📝 Test</button>
 <button onclick="setMode('fill')">✏️ Udfyld</button>
 </div>
 
@@ -67,22 +103,22 @@ function tokenize(text){
 }
 
 let words=[];
-let totalQuestions = 0;
+let totalQuestions=0;
 let mode="order";
 
-let stats = {
+let stats={
   order:{total:0,correct:0,wrong:0},
   quiz:{total:0,correct:0,wrong:0},
   fill:{total:0,correct:0,wrong:0}
 };
 
 function updateStats(){
-    let s = stats[mode];
-    let answered = s.total;
-    let p = answered ? Math.round(s.correct / answered * 100) : 0;
+    let s=stats[mode];
+    let answered=s.total;
+    let p=answered?Math.round(s.correct/answered*100):0;
 
-    statsEl.innerText =
-        `📊 Toplam: ${totalQuestions} | ✏️ Yapılan: ${answered} | 🟢 ${s.correct} | 🔴 ${s.wrong} | %${p}`;
+    statsEl.innerText=
+    `📊 Toplam:${totalQuestions} | ✏️ Yapılan:${answered} | 🟢 ${s.correct} | 🔴 ${s.wrong} | %${p}`;
 }
 
 fileInput.addEventListener("change", e=>{
@@ -96,9 +132,9 @@ fileInput.addEventListener("change", e=>{
         `)(sandbox);
 
         words=sandbox.data;
-        totalQuestions = words.length;
+        totalQuestions=words.length;
 
-        stats = {
+        stats={
           order:{total:0,correct:0,wrong:0},
           quiz:{total:0,correct:0,wrong:0},
           fill:{total:0,correct:0,wrong:0}
@@ -136,46 +172,56 @@ function newExercise(){
     app.appendChild(box);
 }
 
-// ORDER
+/* ORDER */
 function order(){
-    const s = rand(words);
-    const tokens = tokenize(s.word);
-    let shuffled = [...tokens].sort(()=>Math.random()-0.5);
+    const s=rand(words);
+    const tokens=tokenize(s.word);
+    let shuffled=[...tokens].sort(()=>Math.random()-0.5);
 
-    const box = document.createElement("div");
+    const box=document.createElement("div");
     box.className="box";
 
-    const speakBtn = document.createElement("button");
-    speakBtn.innerText = "🔊";
-    speakBtn.onclick = ()=>speak(s.word);
-    box.appendChild(speakBtn);
+    const topBar=document.createElement("div");
+    topBar.className="top-bar";
 
-    const drop = document.createElement("div");
+    const speakBtn=document.createElement("button");
+    speakBtn.innerText="🔊";
+    speakBtn.onclick=()=>speak(s.word);
+
+    const next=document.createElement("button");
+    next.innerText="➡ Næste";
+    next.className="action-btn";
+
+    topBar.appendChild(speakBtn);
+    topBar.appendChild(next);
+    box.appendChild(topBar);
+
+    const drop=document.createElement("div");
     drop.className="drop";
 
-    const pool = document.createElement("div");
+    const pool=document.createElement("div");
 
     box.appendChild(drop);
     box.appendChild(pool);
 
     function checkLive(){
-        let userArr = Array.from(drop.children).map(x=>x.innerText);
+        let userArr=Array.from(drop.children).map(x=>x.innerText);
 
         Array.from(drop.children).forEach((el,i)=>{
-            el.style.background = userArr[i] === tokens[i] ? "lightgreen" : "#f8d7da";
+            el.style.background=userArr[i]===tokens[i]?"lightgreen":"#f8d7da";
         });
     }
 
     shuffled.forEach(w=>{
-        const el = document.createElement("span");
+        const el=document.createElement("span");
         el.className="word";
-        el.innerText = w;
+        el.innerText=w;
 
-        el.onclick = ()=>{
-            if(el.parentElement === pool) drop.appendChild(el);
-            else {
+        el.onclick=()=>{
+            if(el.parentElement===pool) drop.appendChild(el);
+            else{
                 pool.appendChild(el);
-                el.style.background = "#eee";
+                el.style.background="#eee";
             }
             checkLive();
         };
@@ -183,154 +229,169 @@ function order(){
         pool.appendChild(el);
     });
 
-    const next = document.createElement("button");
+    next.onclick=()=>{
+        let user=Array.from(drop.children).map(x=>x.innerText).join(" ");
+        let correct=tokens.join(" ");
+
+        let sStats=stats.order;
+        sStats.total++;
+
+        user===correct?sStats.correct++:sStats.wrong++;
+
+        updateStats();
+        newExercise();
+    };
+
+    return box;
+}
+
+/* QUIZ */
+function quiz(){
+    const s=rand(words);
+    let correct=s.word;
+
+    let options=[correct];
+    while(options.length<6){
+        let r=rand(words).word;
+        if(!options.includes(r)) options.push(r);
+    }
+
+    options.sort(()=>Math.random()-0.5);
+
+    const box=document.createElement("div");
+    box.className="box";
+
+    const topBar=document.createElement("div");
+    topBar.className="top-bar";
+
+    const speakBtn=document.createElement("button");
+    speakBtn.innerText="🔊";
+    speakBtn.onclick=()=>speak(correct);
+
+    const next=document.createElement("button");
     next.innerText="➡ Næste";
     next.className="action-btn";
 
-    next.onclick = ()=>{
-        let user = Array.from(drop.children).map(x=>x.innerText).join(" ");
-        let correct = tokens.join(" ");
+    topBar.appendChild(speakBtn);
+    topBar.appendChild(next);
+    box.appendChild(topBar);
 
-        let sStats = stats.order;
-        sStats.total++;
-
-        user === correct ? sStats.correct++ : sStats.wrong++;
-
-        updateStats();
-        newExercise();
-    };
-
-    box.appendChild(next);
-    return box;
-}
-
-// QUIZ
-function quiz(){
-    const s = rand(words);
-    let correct = s.word;
-
-    let options = [correct];
-    while(options.length < 6){
-        let r = rand(words).word;
-        if(!options.includes(r)) options.push(r);
-    }
-
-    options.sort(()=>Math.random()-0.5);
-
-    const box = document.createElement("div");
-    box.className="box";
-
-    const speakBtn = document.createElement("button");
-    speakBtn.innerText = "🔊";
-    speakBtn.onclick = ()=>speak(correct);
-    box.appendChild(speakBtn);
-
-    const q = document.createElement("h3");
-    q.innerText = s.meaning;
+    const q=document.createElement("h3");
+    q.innerText=s.meaning;
     box.appendChild(q);
 
-    let answered = false;
-    let isCorrect = false;
+    const answersDiv=document.createElement("div");
+    answersDiv.className="answers";
+
+    let answered=false;
+    let isCorrect=false;
 
     options.forEach(opt=>{
-        const btn = document.createElement("button");
+        const btn=document.createElement("button");
         btn.className="answer-btn";
-        btn.innerText = opt;
+        btn.innerText=opt;
 
-        btn.onclick = ()=>{
+        btn.onclick=()=>{
             if(answered) return;
-            answered = true;
+            answered=true;
 
-            // 🔊 HER TIKLAMADA OKU
-            setTimeout(()=>{ speak(correct); }, 200);
+            setTimeout(()=>{speak(correct);},200);
 
-            if(opt === correct){
-                btn.style.background = "lightgreen";
-                isCorrect = true;
-            } else {
-                btn.style.background = "#f8d7da";
+            if(opt===correct){
+                btn.style.background="lightgreen";
+                isCorrect=true;
+            }else{
+                btn.style.background="#f8d7da";
 
-                Array.from(box.children).forEach(el=>{
-                    if(el.innerText === correct){
-                        el.style.background = "lightgreen";
+                Array.from(answersDiv.children).forEach(b=>{
+                    if(b.innerText===correct){
+                        b.style.background="lightgreen";
                     }
                 });
             }
         };
 
-        box.appendChild(btn);
+        answersDiv.appendChild(btn);
     });
 
-    const next = document.createElement("button");
-    next.innerText = "➡ Næste";
-    next.className = "action-btn";
+    box.appendChild(answersDiv);
 
-    next.onclick = ()=>{
+    next.onclick=()=>{
         if(!answered) return;
 
-        let sStats = stats.quiz;
+        let sStats=stats.quiz;
         sStats.total++;
-        isCorrect ? sStats.correct++ : sStats.wrong++;
+
+        isCorrect?sStats.correct++:sStats.wrong++;
 
         updateStats();
         newExercise();
     };
 
-    box.appendChild(next);
     return box;
 }
 
-// FILL
+/* FILL */
 function fill(){
-    const s = rand(words);
-    const tokens = tokenize(s.word);
+    const s=rand(words);
+    const tokens=tokenize(s.word);
 
-    let idx = Math.floor(Math.random()*tokens.length);
-    let answer = tokens[idx];
-    tokens[idx] = "_____";
+    let idx=Math.floor(Math.random()*tokens.length);
+    let answer=tokens[idx];
+    tokens[idx]="_____";
 
-    let options = [answer.toLowerCase()];
+    let options=[answer.toLowerCase()];
 
-    while(options.length < 6){
-        let r = rand(words).word.split(" ")[0].toLowerCase();
+    while(options.length<6){
+        let r=rand(words).word.split(" ")[0].toLowerCase();
         if(!options.includes(r)) options.push(r);
     }
 
     options.sort(()=>Math.random()-0.5);
 
-    const box = document.createElement("div");
+    const box=document.createElement("div");
     box.className="box";
 
-    const speakBtn = document.createElement("button");
-    speakBtn.innerText = "🔊";
-    speakBtn.onclick = ()=>speak(s.word);
-    box.appendChild(speakBtn);
+    const topBar=document.createElement("div");
+    topBar.className="top-bar";
 
-    const q = document.createElement("h3");
-    q.innerText = tokens.join(" ");
+    const speakBtn=document.createElement("button");
+    speakBtn.innerText="🔊";
+    speakBtn.onclick=()=>speak(s.word);
+
+    const next=document.createElement("button");
+    next.innerText="➡ Næste";
+    next.className="action-btn";
+
+    topBar.appendChild(speakBtn);
+    topBar.appendChild(next);
+    box.appendChild(topBar);
+
+    const q=document.createElement("h3");
+    q.innerText=tokens.join(" ");
     box.appendChild(q);
 
-    let answered = false;
-    let isCorrect = false;
+    let answered=false;
+    let isCorrect=false;
 
     options.forEach(opt=>{
-        const btn = document.createElement("button");
+        const btn=document.createElement("button");
         btn.className="answer-btn";
-        btn.innerText = opt;
+        btn.innerText=opt;
 
-        btn.onclick = ()=>{
+        btn.onclick=()=>{
             if(answered) return;
-            answered = true;
+            answered=true;
 
-            if(opt === answer.toLowerCase()){
-                btn.style.background = "lightgreen";
-                isCorrect = true;
-            } else {
-                btn.style.background = "#f8d7da";
+            if(opt===answer.toLowerCase()){
+                btn.style.background="lightgreen";
+                isCorrect=true;
+            }else{
+                btn.style.background="#f8d7da";
 
                 Array.from(box.children).forEach(el=>{
-                    if(el.innerText === answer.toLowerCase()){
-                        el.style.background = "lightgreen";
+                    if(el.innerText===answer.toLowerCase()){
+                        el.style.background="lightgreen";
                     }
                 });
             }
@@ -339,25 +400,22 @@ function fill(){
         box.appendChild(btn);
     });
 
-    const next = document.createElement("button");
-    next.innerText = "➡ Næste";
-    next.className = "action-btn";
-
-    next.onclick = ()=>{
+    next.onclick=()=>{
         if(!answered) return;
 
-        let sStats = stats.fill;
+        let sStats=stats.fill;
         sStats.total++;
-        isCorrect ? sStats.correct++ : sStats.wrong++;
+
+        isCorrect?sStats.correct++:sStats.wrong++;
 
         updateStats();
         newExercise();
     };
 
-    box.appendChild(next);
     return box;
 }
 
 </script>
+
 </body>
 </html>
