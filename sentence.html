@@ -1,5 +1,4 @@
 <!DOCTYPE html>
-
 <html lang="da">
 <head>
 <meta charset="UTF-8">
@@ -208,7 +207,7 @@ function order(){
     return box;
 }
 
-// QUIZ (🔊 DOĞRU CEVABI OKUR)
+// QUIZ ✅ (HER TIKLAMADA OKUR)
 function quiz(){
     const s = rand(words);
     let correct = s.word;
@@ -226,7 +225,7 @@ function quiz(){
 
     const speakBtn = document.createElement("button");
     speakBtn.innerText = "🔊";
-    speakBtn.onclick = ()=>speak(correct); // 🔥 SADECE DOĞRU
+    speakBtn.onclick = ()=>speak(correct);
     box.appendChild(speakBtn);
 
     const q = document.createElement("h3");
@@ -244,6 +243,11 @@ function quiz(){
         btn.onclick = ()=>{
             if(answered) return;
             answered = true;
+
+            // 🔥 HER ZAMAN OKU
+            setTimeout(()=>{
+                speak(correct);
+            },200);
 
             if(opt === correct){
                 btn.style.background = "lightgreen";
